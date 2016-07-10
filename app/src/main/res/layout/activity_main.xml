@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.helfholz.muetze187.vatertag2017.MainActivity">
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/listViewTeams"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:divider="@android:color/holo_orange_dark"
+        android:dividerHeight="4px"
+        android:layout_toStartOf="@+id/textView"
+        android:layout_below="@+id/textViewDateTime"
+        android:layout_toLeftOf="@+id/textView"
+        android:layout_above="@+id/buttonSpeichern" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/f_e_t_t"
+        android:id="@+id/textViewFett"
+        android:width="200dp"
+        android:height="80dp"
+        android:paddingTop="10dp"
+        android:textColor="@android:color/holo_orange_dark"
+        android:textSize="48dp"
+        android:clickable="false"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewDateTime"
+        android:width="100dp"
+        android:height="80dp"
+        android:paddingTop="10dp"
+        android:textSize="18sp"
+        android:layout_alignTop="@+id/textViewFett"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="10dp"
+        android:textColor="@android:color/holo_orange_dark" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView"
+        android:layout_alignTop="@+id/listViewTeams"
+        android:layout_centerHorizontal="true" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageView"
+        android:minHeight="28dp"
+        android:minWidth="28dp"
+        android:background="@android:color/holo_orange_dark"
+        android:padding="4dp"
+        android:src="#ff0000"
+        android:layout_below="@+id/textView"
+        android:layout_alignRight="@+id/listViewTeams"
+        android:layout_alignEnd="@+id/listViewTeams"
+        android:layout_marginRight="26dp"
+        android:layout_marginEnd="26dp" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageView2"
+        android:minHeight="28dp"
+        android:minWidth="28dp"
+        android:background="@android:color/holo_orange_dark"
+        android:padding="4dp"
+        android:src="#ff0000"
+        android:layout_marginTop="23dp"
+        android:layout_below="@+id/imageView"
+        android:layout_alignLeft="@+id/imageView"
+        android:layout_alignStart="@+id/imageView" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/powered_by_adelheid"
+        android:id="@+id/textView2"
+        android:textColor="@android:color/holo_orange_dark"
+        android:textSize="10dp"
+        android:layout_alignBottom="@+id/textViewFett"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginLeft="4dp" />
+
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/listViewPlaylist"
+        android:layout_toRightOf="@+id/textView"
+        android:layout_toEndOf="@+id/textView"
+        android:layout_alignTop="@+id/imageView" />
+
+    <SeekBar
+        android:layout_width="216dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/seekBarMusic"
+        android:thumb="@drawable/schweinrechts2"
+        android:progressBackgroundTint="#ffaaab"
+        android:layout_above="@+id/textView2"
+        android:layout_toRightOf="@+id/textViewFett" />
+
+
+        <ImageButton
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:id="@+id/play"
+            android:scaleType="center"
+
+
+            android:background="@drawable/ic_play"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@+id/prev"
+            android:layout_toEndOf="@+id/prev"
+            android:layout_marginLeft="26dp"
+            android:layout_marginStart="26dp" />
+
+
+        <ImageButton
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:id="@+id/next"
+            android:scaleType="center"
+            android:background="@drawable/ic_forward"
+            android:layout_alignParentTop="true"
+            android:layout_alignRight="@+id/seekBarMusic"
+            android:layout_alignEnd="@+id/seekBarMusic" />
+
+
+        <ImageButton
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:id="@+id/prev"
+            android:scaleType="center"
+            android:background="@drawable/ic_backwards"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@+id/textViewFett"
+            android:layout_toEndOf="@+id/textViewFett" />
+
+    <ImageButton
+        android:layout_width="26dp"
+        android:layout_height="36dp"
+        android:id="@+id/shuffle"
+        android:scaleType="center"
+        android:background="@drawable/ic_shuffle"
+        android:layout_alignBottom="@+id/textViewFett"
+        android:layout_toRightOf="@+id/next"
+        android:layout_toEndOf="@+id/next" />
+
+    <ImageButton
+        android:layout_width="26dp"
+        android:layout_height="36dp"
+        android:id="@+id/imageButton"
+        android:scaleType="center"
+        android:src="@drawable/ic_playlist"
+        android:layout_alignTop="@+id/textViewDateTime"
+        android:layout_toRightOf="@+id/next"
+        android:layout_toEndOf="@+id/next" />
+
+    <Spinner
+        android:layout_width="108dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/spinner"
+        android:layout_below="@+id/seekBarMusic"
+        android:layout_alignRight="@+id/shuffle"
+        android:layout_alignEnd="@+id/shuffle"
+        android:layout_toRightOf="@+id/textViewFett"
+        android:layout_toEndOf="@+id/textViewFett" />
+
+    <Button
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:text="Speichern"
+        android:id="@+id/buttonSpeichern"
+        android:textSize="8sp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignLeft="@+id/textView2"
+        android:layout_alignStart="@+id/textView2" />
+
+    <Button
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:text="Senden..."
+        android:id="@+id/button2"
+        android:textSize="8sp"
+        android:layout_alignTop="@+id/buttonLaden"
+        android:layout_toRightOf="@+id/buttonLaden"
+        android:layout_toEndOf="@+id/buttonLaden" />
+
+    <Button
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:text="Laden"
+        android:id="@+id/buttonLaden"
+        android:textSize="8sp"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/buttonSpeichern"
+        android:layout_toEndOf="@+id/buttonSpeichern" />
+
+</RelativeLayout>
