@@ -9,10 +9,12 @@ import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
 
+import java.util.Comparator;
+
 /**
  * Created by Muetze187 on 28.06.2016.
  */
-public class Teams {
+public class Teams{
 
     private String name;
     private int drunk;
@@ -60,5 +62,14 @@ public class Teams {
         return view;
     }
 
+
+    public static Comparator<Teams> teamsComparator = new Comparator<Teams>() {
+        @Override
+        public int compare(Teams t1, Teams t2) {
+            Boolean alert1 = t1.getAlerted();
+            Boolean alert2 = t2.getAlerted();
+            return alert2.compareTo(alert1);
+        }
+    };
 
 }

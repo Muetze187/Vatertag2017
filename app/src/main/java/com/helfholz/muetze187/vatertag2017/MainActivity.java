@@ -1,5 +1,6 @@
 package com.helfholz.muetze187.vatertag2017;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
@@ -10,6 +11,7 @@ import android.graphics.PorterDuff;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
@@ -35,9 +37,13 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Random;
 import java.util.TimeZone;
+
+import static java.util.Collections.*;
 
 public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener, MediaPlayer.OnCompletionListener {
 
@@ -631,6 +637,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         dateFormat.setTimeZone(tz);
     }
 
+
     private void toggleAlert(int posList) {
 
         if(teamList.get(posList).getAlerted()){
@@ -638,6 +645,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         }else{
             teamList.get(posList).setAlerted(true);
             mp.start();
+            Collections.sort(teamList, Teams.teamsComparator);
+
 
         }
 
