@@ -3,6 +3,7 @@ package com.helfholz.muetze187.vatertag2017;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
@@ -32,14 +33,17 @@ import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
 
@@ -56,30 +60,33 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     ImageView imageViewAlarm0;
     ImageView imageViewAlarm1;
     int currentSong;
-
+    private String root = Environment.getExternalStorageDirectory().toString()+"/Music/" ;
+    ArrayList<String> item, path;
     ArrayAdapter<String> mAdapter;
     CustomListAdapter adapterTeamList;
-
+    ArrayAdapter<String> adapterTest;
     ArrayList<Teams> teamList = new ArrayList<Teams>();
 
+    ArrayList<String> music = new ArrayList<String>();
+    ArrayList<String> musicTrimmed = new ArrayList<String>();
+
     ImageButton play, prev, forw, shuffle;
-    SeekBar seekBarMusic;
+    static SeekBar seekBarMusic;
     final static String FOLDER = "/music/";
     ArrayList image_details;
     final int delay = 1000;
     int delay2 = 2000;
     Handler hTimeDate;
-    Handler hMusic;
+    static Handler hMusic;
     Handler hBlinzeln;
     Handler hAlert;
-    boolean isStarted;
+    static boolean isStarted;
     boolean isShuffle;
     Date date;
     SimpleDateFormat dateFormat;
     String s;
     Button buttonLoad, buttonSave;
-    private MediaPlayer mediaPlayerMusic;
-    private String[] musicList;
+    static MediaPlayer mediaPlayerMusic;
     MediaPlayer mp;
     //TESTS
     ImageButton imageButton;
@@ -94,21 +101,26 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     static final int MIN_DISTANCE = 150;
     public static AudioManager audioManager;
     //TeamSaver teamSaver;
-
+    boolean passed = false;
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode == 100){
-            currentSong = data.getExtras().getInt("songIndex");
-            try {
-                playSong(musicList[currentSong]);
-                isStarted = true;
+        String name = null;
+        if(resultCode == 200){
+
+            name = data.getExtras().getString("filename");
+
+
                 play.setBackgroundResource(R.drawable.ic_pause);
-                spinner.setSelection(currentSong);
-            } catch (IOException e) {
-                e.printStackTrace();
+                if(!name.isEmpty()){
+                int spinnerPos = adapterTest.getPosition("/TD/" +name);
+                    spinner.setSelection(spinnerPos);
+                    passed = true;
             }
+
+
         }
+        Log.d("name ist",name);
     }
 
     @Override
@@ -127,9 +139,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 {
                     //Toast.makeText(this, "left2right swipe", Toast.LENGTH_SHORT).show ();
                     Intent i = new Intent(MainActivity.this, Mp3Activity.class);
-                    i.putExtra("music", musicList);
 
-                    startActivity(i);
+
+                    startActivityForResult(i, 200);
                     overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
                 }
                 else
@@ -168,14 +180,19 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         isStarted = false;
         isShuffle = false;
         image_details = getListData();
-        musicList = getMusic();
+
+        getMusic();
+        for (String a:music) {
+            musicTrimmed.add(a.substring(25));
+        }
+
         buttonLoad = (Button) findViewById(R.id.buttonLaden);
         buttonSave = (Button) findViewById(R.id.buttonSpeichern);
         //TESTS
         imageButton = (ImageButton) findViewById(R.id.imageButton);
         spinner = (Spinner) findViewById(R.id.spinner);
-        final ArrayAdapter<String> adapterTest = new ArrayAdapter<String>(this,
-                R.layout.spinner_item, musicList);
+        adapterTest = new ArrayAdapter<String>(this,
+                R.layout.spinner_item, musicTrimmed);
         adapterTest.setDropDownViewResource(R.layout.spinner_item);
         spinner.setAdapter(adapterTest);
         //helps but depricated
@@ -197,7 +214,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         dialogDeleteTeam.setContentView(R.layout.team_dialog_delete);
         dialogDeleteTeam.setCanceledOnTouchOutside(true);
         dialogDeleteTeam.setCancelable(true);
-
         //teamSaver = new TeamSaver(getApplicationContext());
 
         //music seekbar
@@ -211,15 +227,19 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
         audioManager = (AudioManager) getSystemService(this.AUDIO_SERVICE);
 
+
+
+
         hBlinzeln = new Handler();
         hAlert = new Handler();
         adapterTeamList = new CustomListAdapter(this, image_details);
-        mAdapter= new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, musicList);
+        //mAdapter= new ArrayAdapter<String>(this,
+        //        android.R.layout.simple_list_item_1, musicTrimmed);
 
-        //mListView.setAdapter(mAdapter);
+       // mListView.setAdapter(mAdapter);
         listViewTeams.setAdapter(adapterTeamList);
-
+       Log.d("liste1",music.get(0).toString());
+       Log.d("listelast", music.get(music.size()-1).toString());
 
         //init Handlers
         initHandlers();
@@ -256,12 +276,15 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                Log.d("IM HERE! FOR NO REASON", "");
                 try {
                     if(!isStarted){
                         currentSong = i;
-                    }else{
-                        playSong(musicList[i]);
+                    }else if(passed) {
                         isStarted = true;
+                    }else{
+                        playSong(music.get(i));
+                       // isStarted = true;
                         play.setBackgroundResource(R.drawable.ic_pause);
                         currentSong = i;
 
@@ -296,7 +319,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         }
                     }else{
                         try {
-                            playSong(musicList[currentSong]);
+                            playSong(music.get(currentSong));
                             isStarted = true;
                             spinner.setSelection(currentSong);
                             play.setBackgroundResource(R.drawable.ic_pause);
@@ -316,9 +339,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 }else{
                     if(currentSong == 0) {
                         mediaPlayerMusic.reset();
-                        currentSong = musicList.length-1;
+                        currentSong = music.size()-1;
                         try {
-                            playSong(musicList[currentSong]);
+                            playSong(music.get(currentSong));
                             spinner.setSelection(currentSong);
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -326,7 +349,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     }else{
                         currentSong--;
                         try {
-                            playSong(musicList[currentSong]);
+                            playSong(music.get(currentSong));
                             spinner.setSelection(currentSong);
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -345,11 +368,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 if(!isStarted){
 
                 }else{
-                    if(currentSong < (musicList.length -1)) {
+                    if(currentSong < (music.size() -1)) {
                         mediaPlayerMusic.reset();
                         currentSong++;
                         try {
-                            playSong(musicList[currentSong]);
+                            playSong(music.get(currentSong));
                             spinner.setSelection(currentSong);
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -357,7 +380,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     }else{
                         currentSong = 0;
                         try {
-                            playSong(musicList[currentSong]);
+                            playSong(music.get(currentSong));
                             spinner.setSelection(currentSong);
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -373,7 +396,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         shuffle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(isShuffle){
+                Intent intent = new Intent(getApplicationContext(), FileExplorer.class);
+                startActivity(intent);
+
+               /* if(isShuffle){
                     isShuffle = false;
                     shuffle.setBackgroundResource(R.drawable.ic_shuffle);
                 }
@@ -383,30 +409,33 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
                 }
 
-                Log.d("HELLO", String.valueOf(isShuffle));
+                Log.d("HELLO", String.valueOf(isShuffle));*/
             }
         });
 
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+       /* mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
                                     long arg3) {
-                try {
-                    playSong(musicList[arg2]);
-                    currentSong = arg2;
-                    play.setBackgroundResource(R.drawable.ic_pause);
-                    isStarted = true;
-                    spinner.setSelection(currentSong);
-                } catch (IllegalArgumentException e) {
-                    e.printStackTrace();
-                } catch (IllegalStateException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+                        try {
+                            playSong(music.get(arg2));
+                            currentSong = arg2;
+                            play.setBackgroundResource(R.drawable.ic_pause);
+                            isStarted = true;
+                            spinner.setSelection(currentSong);
+                        } catch (IllegalArgumentException e) {
+                            e.printStackTrace();
+                        } catch (IllegalStateException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+
+
+        });*/
 
         listViewTeams.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -547,29 +576,26 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         },delay3);
     }
 
+
+
     @Override
     public void onCompletion(MediaPlayer player) {
 
-        // check for repeat is ON or OFF
-        //if(isRepeat){
-        // repeat is on play same song again
-        //    playSong(currentSongIndex);
-        // } else i
         if (isShuffle) {
             // shuffle is on - play a random song
             Random rand = new Random();
-            currentSong = rand.nextInt((musicList.length - 1) - 0 + 1) + 0;
+            currentSong = rand.nextInt((music.size() - 1) - 0 + 1) + 0;
             try {
-                playSong(musicList[currentSong]);
+                playSong(music.get(currentSong));
                 spinner.setSelection(currentSong);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
             // no repeat or shuffle ON - play next song
-            if (currentSong < (musicList.length - 1)) {
+            if (currentSong < (music.size() - 1)) {
                 try {
-                    playSong(musicList[currentSong + 1]);
+                    playSong(music.get(currentSong + 1));
                     spinner.setSelection(currentSong);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -578,7 +604,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             } else {
                 // play first song
                 try {
-                    playSong(musicList[0]);
+                    playSong(music.get(0));
                     spinner.setSelection(currentSong);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -590,13 +616,14 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
 
-    private void playSong(String path) throws IllegalArgumentException,
+    public void playSong(String path) throws IllegalArgumentException,
             IllegalStateException, IOException {
-        String extStorageDirectory = Environment.getExternalStorageDirectory()
-                .toString() + FOLDER; //add var folder to run on actual device!
+       // String extStorageDirectory = Environment.getExternalStorageDirectory()
+        //        .toString() + "/Music/TD"; //add var folder to run on actual device!
 
-        path = extStorageDirectory + File.separator + path;
-
+       // path = extStorageDirectory + File.separator + path;
+       //path = extStorageDirectory + path;
+        Log.d("path:", path);
         mediaPlayerMusic.reset();
         mediaPlayerMusic.setDataSource(path);
         mediaPlayerMusic.prepare();
@@ -642,12 +669,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
         if(teamList.get(posList).getAlerted()){
             teamList.get(posList).setAlerted(false);
+            Collections.sort(teamList, Teams.teamsComparator);
         }else{
             teamList.get(posList).setAlerted(true);
-            mp.start();
+           // mp.start();
             Collections.sort(teamList, Teams.teamsComparator);
-
-
         }
 
         adapterTeamList.notifyDataSetChanged();
@@ -712,7 +738,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         updateSeekBar();
     }
 
-    private Runnable mUpdateTimeTask = new Runnable() {
+    private static Runnable mUpdateTimeTask = new Runnable() {
         @Override
         public void run() {
             Double percentage = (double) 0;
@@ -738,31 +764,67 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         startActivity(launchBrowser);
     }
 
-    public String[] getMusic() {
-        //FOR ACTUAL DEVICE
-       String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension("mp3");
+    public void getMusic() { //String[]
+           //FOR ACTUAL DEVICE
+       /* String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension("mp3");
         String selectionMimeType = MediaStore.Files.FileColumns.MIME_TYPE + "=?";
-        String[] selectionArgsMp3 = new String[]{  mimeType};
+        String[] selectionArgsMp3 = new String[]{ mimeType};
         final Cursor mCursor = getContentResolver().query(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                new String[] { MediaStore.Audio.Media.DISPLAY_NAME }, selectionMimeType , selectionArgsMp3,
-                //"LOWER(" + MediaStore.Audio.Media.TITLE + ") ASC");
-                MediaStore.Audio.Media._ID);
+                new String[] {String.valueOf(MediaStore.Audio.Media.DISPLAY_NAME)}, selectionMimeType , selectionArgsMp3,
+                MediaStore.Audio.Media._ID);*/
+        ContentResolver cr = this.getContentResolver();
+        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
+        String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
+        Cursor cur = cr.query(uri, null, selection, null, sortOrder);
 
-        int count = mCursor.getCount();
+        int count = 0;
+
+        if(cur != null)
+        {
+            count = cur.getCount();
+
+            if(count > 0)
+            {
+                while(cur.moveToNext())
+                {
+                    String data = cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA));
+                    music.add(data);
+                    // Add code to get more column here
+
+                    // Save to your list here
+                }
+
+            }
+        }
+
+        cur.close();
+
+
+
+       /* int count = mCursor.getCount();
 
         String[] songs = new String[count];
         int i = 0;
         if (mCursor.moveToFirst()) {
             do {
-                songs[i] = mCursor.getString(0);
+                songs[i] = mCursor.getString(mCursor.getColumnIndex(MediaStore.Audio.Media.DATA));
                 i++;
             } while (mCursor.moveToNext());
         }
 
         mCursor.close();
-
-        return songs;
+*/
+       // return songs;
     }
+
 }
 
+class Mp3Filter implements FilenameFilter{
+
+    @Override
+    public boolean accept(File file, String s) {
+        return (s.endsWith(".mp3"));
+    }
+}
