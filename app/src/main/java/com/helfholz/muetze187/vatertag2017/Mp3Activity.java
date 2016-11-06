@@ -36,7 +36,6 @@ public class Mp3Activity extends Activity {
     ArrayAdapter<String> mAdapter;
     MainActivity mainActivity = new MainActivity();
    String fileName = "";
-
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch(event.getAction())

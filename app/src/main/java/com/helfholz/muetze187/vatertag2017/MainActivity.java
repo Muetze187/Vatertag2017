@@ -1,28 +1,32 @@
 package com.helfholz.muetze187.vatertag2017;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.ColorDrawable;
+import android.location.Location;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Build;
-import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -35,36 +39,44 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
 
-import static java.util.Collections.*;
+import static com.helfholz.muetze187.vatertag2017.R.id.map;
 
-public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener, MediaPlayer.OnCompletionListener {
+public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener, MediaPlayer.OnCompletionListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     //Gui Elements
     TextView textViewDateTime;
     TextView textFett;
     TextView adelheid;
     ListView listViewTeams;
-    ListView mListView;
-    ImageView imageViewAlarm0;
-    ImageView imageViewAlarm1;
+    TextView textViewAmountDrink;
+    final String DRINKAMOUNT = "Zu trinkende Menge: ";
     int currentSong;
-    private String root = Environment.getExternalStorageDirectory().toString()+"/Music/" ;
-    ArrayList<String> item, path;
-    ArrayAdapter<String> mAdapter;
     CustomListAdapter adapterTeamList;
-    ArrayAdapter<String> adapterTest;
+    ArrayAdapter<String> adapterSpinner;
     ArrayList<Teams> teamList = new ArrayList<Teams>();
 
     ArrayList<String> music = new ArrayList<String>();
@@ -72,7 +84,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     ImageButton play, prev, forw, shuffle;
     static SeekBar seekBarMusic;
-    final static String FOLDER = "/music/";
     ArrayList image_details;
     final int delay = 1000;
     int delay2 = 2000;
@@ -89,45 +100,48 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     static MediaPlayer mediaPlayerMusic;
     MediaPlayer mp;
     //TESTS
-    ImageButton imageButton;
     Spinner spinner;
-    private String m_Text = "";
     Dialog dialogChangeName;
     Dialog dialogNewTeam;
     Dialog dialogTeamChoice;
     Dialog dialogDeleteTeam;
+    Dialog dialogChooseDrink;
+    Dialog dialogDrinkAccepted;
     ImageView imageViewPigOpenEyes, imageViewPigClosedEyes;
-    private float x1,x2;
+    ImageView imageViewDrink1, imageViewDrink2, imageViewDrink3;
+    private float x1, x2;
     static final int MIN_DISTANCE = 150;
     public static AudioManager audioManager;
+    private GoogleApiClient mGoogleApiClient;
+
     //TeamSaver teamSaver;
-    boolean passed = false;
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         String name = null;
-        if(resultCode == 200){
+        if (resultCode == 200) {
 
             name = data.getExtras().getString("filename");
 
 
-                play.setBackgroundResource(R.drawable.ic_pause);
-                if(!name.isEmpty()){
-                int spinnerPos = adapterTest.getPosition("/TD/" +name);
-                    spinner.setSelection(spinnerPos);
-                    passed = true;
+            play.setBackgroundResource(R.drawable.ic_pause);
+            if (!name.isEmpty()) {
+                int spinnerPos = adapterSpinner.getPosition("/TD/" + name);
+                spinner.setSelection(spinnerPos);
+                isStarted = true;
             }
 
 
         }
-        Log.d("name ist",name);
+        Log.d("name ist", name);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
 
-        switch(event.getAction())
-        {
+        switch (event.getAction()) {
 
             case MotionEvent.ACTION_DOWN:
                 x1 = event.getX();
@@ -135,17 +149,14 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             case MotionEvent.ACTION_UP:
                 x2 = event.getX();
                 float deltaX = x2 - x1;
-                if (Math.abs(deltaX) > MIN_DISTANCE)
-                {
+                if (Math.abs(deltaX) > MIN_DISTANCE) {
                     //Toast.makeText(this, "left2right swipe", Toast.LENGTH_SHORT).show ();
                     Intent i = new Intent(MainActivity.this, Mp3Activity.class);
 
 
                     startActivityForResult(i, 200);
                     overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-                }
-                else
-                {
+                } else {
                     // consider as something else - a screen tap for example
                 }
                 break;
@@ -163,40 +174,47 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         setContentView(R.layout.activity_main);
         //force landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        //Maps
+        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+        //Location
+        /*if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }*/
         //init GUI
         textViewDateTime = (TextView) findViewById(R.id.textViewDateTime);
         textFett = (TextView) findViewById(R.id.textViewFett);
-        imageViewAlarm0 = (ImageView) findViewById(R.id.imageView);
-        imageViewAlarm1 = (ImageView) findViewById(R.id.imageView2);
-        imageViewAlarm1.setVisibility(View.INVISIBLE);
-        imageViewAlarm0.setVisibility(View.INVISIBLE);
         adelheid = (TextView) findViewById(R.id.textView2);
-        play = (ImageButton)findViewById(R.id.play);
+        play = (ImageButton) findViewById(R.id.play);
         prev = (ImageButton) findViewById(R.id.prev);
         forw = (ImageButton) findViewById(R.id.next);
         shuffle = (ImageButton) findViewById(R.id.shuffle);
         listViewTeams = (ListView) findViewById(R.id.listViewTeams);
-        mListView = (ListView) findViewById(R.id.listViewPlaylist);
         isStarted = false;
         isShuffle = false;
         image_details = getListData();
 
+
         getMusic();
-        for (String a:music) {
+        for (String a : music) {
             musicTrimmed.add(a.substring(25));
         }
 
         buttonLoad = (Button) findViewById(R.id.buttonLaden);
         buttonSave = (Button) findViewById(R.id.buttonSpeichern);
         //TESTS
-        imageButton = (ImageButton) findViewById(R.id.imageButton);
         spinner = (Spinner) findViewById(R.id.spinner);
-        adapterTest = new ArrayAdapter<String>(this,
+        adapterSpinner = new ArrayAdapter<String>(this,
                 R.layout.spinner_item, musicTrimmed);
-        adapterTest.setDropDownViewResource(R.layout.spinner_item);
-        spinner.setAdapter(adapterTest);
+        adapterSpinner.setDropDownViewResource(R.layout.spinner_item);
+        spinner.setAdapter(adapterSpinner);
         //helps but depricated
         spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorPink), PorterDuff.Mode.SRC_ATOP);
+        //Dialogs
         dialogChangeName = new Dialog(MainActivity.this);
         dialogChangeName.setContentView(R.layout.team_dialog_changename);
         dialogChangeName.setCanceledOnTouchOutside(true);
@@ -210,24 +228,35 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         dialogTeamChoice.setTitle("Wähle weise...");
         dialogTeamChoice.setCancelable(true);
         dialogTeamChoice.setCanceledOnTouchOutside(true);
+        dialogTeamChoice.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialogDeleteTeam = new Dialog(MainActivity.this);
         dialogDeleteTeam.setContentView(R.layout.team_dialog_delete);
         dialogDeleteTeam.setCanceledOnTouchOutside(true);
         dialogDeleteTeam.setCancelable(true);
+        dialogChooseDrink = new Dialog(MainActivity.this);
+        dialogChooseDrink.setContentView(R.layout.choose_drink);
+        dialogChooseDrink.setCanceledOnTouchOutside(true);
+        dialogChooseDrink.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialogDrinkAccepted = new Dialog(MainActivity.this);
+        dialogDrinkAccepted.setContentView(R.layout.drink_acception);
+        dialogDrinkAccepted.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         //teamSaver = new TeamSaver(getApplicationContext());
 
         //music seekbar
         seekBarMusic = (SeekBar) findViewById(R.id.seekBarMusic);
         seekBarMusic.setOnSeekBarChangeListener(this);
-        seekBarMusic.getProgressDrawable().setColorFilter(Color.parseColor("#ffaaab"),android.graphics.PorterDuff.Mode.SRC_IN);
+        seekBarMusic.getProgressDrawable().setColorFilter(Color.parseColor("#ffaaab"), android.graphics.PorterDuff.Mode.SRC_IN);
 
+        //ImageViews
         imageViewPigClosedEyes = (ImageView) dialogTeamChoice.findViewById(R.id.imageViewPigClosedEyes);
         imageViewPigOpenEyes = (ImageView) dialogTeamChoice.findViewById(R.id.imageViewPigOpenEyes);
         imageViewPigClosedEyes.setVisibility(View.INVISIBLE);
+        imageViewDrink1 = (ImageView) dialogChooseDrink.findViewById(R.id.imageView);
+        imageViewDrink2 = (ImageView) dialogChooseDrink.findViewById(R.id.imageView2);
+        imageViewDrink3 = (ImageView) dialogChooseDrink.findViewById(R.id.imageView3);
+
 
         audioManager = (AudioManager) getSystemService(this.AUDIO_SERVICE);
-
-
 
 
         hBlinzeln = new Handler();
@@ -236,10 +265,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         //mAdapter= new ArrayAdapter<String>(this,
         //        android.R.layout.simple_list_item_1, musicTrimmed);
 
-       // mListView.setAdapter(mAdapter);
+        // mListView.setAdapter(mAdapter);
         listViewTeams.setAdapter(adapterTeamList);
-       Log.d("liste1",music.get(0).toString());
-       Log.d("listelast", music.get(music.size()-1).toString());
+        Log.d("liste1", music.get(0).toString());
+        Log.d("listelast", music.get(music.size() - 1).toString());
 
         //init Handlers
         initHandlers();
@@ -250,14 +279,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         mp = MediaPlayer.create(this, R.raw.schweinquieken);
 
         //TESTS
-        imageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(getApplicationContext(), PlayListActivity.class);
-                startActivityForResult(i,100);
-            }
-        });
-
         buttonLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -278,13 +299,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 Log.d("IM HERE! FOR NO REASON", "");
                 try {
-                    if(!isStarted){
+                    if (!isStarted) {
                         currentSong = i;
-                    }else if(passed) {
-                        isStarted = true;
-                    }else{
+                    } else {
                         playSong(music.get(i));
-                       // isStarted = true;
+                        // isStarted = true;
                         play.setBackgroundResource(R.drawable.ic_pause);
                         currentSong = i;
 
@@ -301,52 +320,50 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         });
 
 
-
         //OnClick-Listeners
 
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                    if(isStarted){
-                        if(mediaPlayerMusic.isPlaying()) {
-                            mediaPlayerMusic.pause();
-                            play.setBackgroundResource(R.drawable.ic_play);
+                if (isStarted) {
+                    if (mediaPlayerMusic.isPlaying()) {
+                        mediaPlayerMusic.pause();
+                        play.setBackgroundResource(R.drawable.ic_play);
 
-                        }
-                        else{
-                            mediaPlayerMusic.start();
-                            play.setBackgroundResource(R.drawable.ic_pause);
-                        }
-                    }else{
-                        try {
-                            playSong(music.get(currentSong));
-                            isStarted = true;
-                            spinner.setSelection(currentSong);
-                            play.setBackgroundResource(R.drawable.ic_pause);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                    } else {
+                        mediaPlayerMusic.start();
+                        play.setBackgroundResource(R.drawable.ic_pause);
                     }
-
+                } else {
+                    try {
+                        playSong(music.get(currentSong));
+                        isStarted = true;
+                        spinner.setSelection(currentSong);
+                        play.setBackgroundResource(R.drawable.ic_pause);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
+
+            }
         });
 
         prev.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(!isStarted){
+                if (!isStarted) {
 
-                }else{
-                    if(currentSong == 0) {
+                } else {
+                    if (currentSong == 0) {
                         mediaPlayerMusic.reset();
-                        currentSong = music.size()-1;
+                        currentSong = music.size() - 1;
                         try {
                             playSong(music.get(currentSong));
                             spinner.setSelection(currentSong);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                    }else{
+                    } else {
                         currentSong--;
                         try {
                             playSong(music.get(currentSong));
@@ -365,10 +382,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         forw.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(!isStarted){
+                if (!isStarted) {
 
-                }else{
-                    if(currentSong < (music.size() -1)) {
+                } else {
+                    if (currentSong < (music.size() - 1)) {
                         mediaPlayerMusic.reset();
                         currentSong++;
                         try {
@@ -377,7 +394,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                    }else{
+                    } else {
                         currentSong = 0;
                         try {
                             playSong(music.get(currentSong));
@@ -444,85 +461,191 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 Button buttonChangeName = (Button) dialogTeamChoice.findViewById(R.id.buttonChangeName);
                 Button buttonDeleteTeam = (Button) dialogTeamChoice.findViewById(R.id.buttonDelete);
                 Button buttonNewTeam = (Button) dialogTeamChoice.findViewById(R.id.buttonNewTeam);
-                blizeldiewinzel();
-                buttonChangeName.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        dialogChangeName.setTitle("Teamname ändern");
-                        Button buttonOK = (Button) dialogChangeName.findViewById(R.id.button3);
-                        final EditText editName = (EditText) dialogChangeName.findViewById(R.id.editText2);
-                        dialogChangeName.setCanceledOnTouchOutside(true);
-                        dialogChangeName.show();
-                        buttonOK.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                String tmp = editName.getText().toString();
-                                if(editName.getText().toString().equals(""))
-                                    teamList.get(position).setName("no name selected");
-                                else
-                                    teamList.get(position).setName(tmp);
-                                adapterTeamList.notifyDataSetChanged();
-                                editName.setText("");
-                                dialogChangeName.dismiss();
-                            }
-                        });
+                textViewAmountDrink = (TextView) dialogChooseDrink.findViewById(R.id.textViewMengeDrink);
+
+                if(teamList.get(position).getAlerted()) {
+                    Random rnd = new Random();
+                    String amountDrink = 2 + " cl";
+                    textViewAmountDrink.setText(DRINKAMOUNT + amountDrink);
+                    final int drink = rnd.nextInt(3);
+                    Log.d("drink","drink" +drink);
+                    switch(drink){
+                        case 0:
+                            imageViewDrink1.setImageResource(R.drawable.number1_pink);
+                            imageViewDrink2.setImageResource(R.drawable.number2);
+                            imageViewDrink3.setImageResource(R.drawable.number3);
+                            break;
+                        case 1:
+                            imageViewDrink2.setImageResource(R.drawable.number2_pink);
+                            imageViewDrink1.setImageResource(R.drawable.number1);
+                            imageViewDrink3.setImageResource(R.drawable.number3);
+                            break;
+                        case 2:
+                            imageViewDrink3.setImageResource(R.drawable.number3_pink);
+                            imageViewDrink1.setImageResource(R.drawable.number1);
+                            imageViewDrink2.setImageResource(R.drawable.number2);
                     }
-                });
-                buttonDeleteTeam.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        dialogDeleteTeam.setTitle("Wirklich löschen");
-                        Button buttonOK = (Button) dialogDeleteTeam.findViewById(R.id.buttonDeleteOk);
-                        Button buttonCancel = (Button) dialogDeleteTeam.findViewById(R.id.buttonDeleteCancel);
-                        dialogDeleteTeam.show();
-                        buttonOK.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                teamList.remove(position);
-                                adapterTeamList.notifyDataSetChanged();
-                                dialogDeleteTeam.dismiss();
-                                dialogTeamChoice.dismiss();
+
+                    dialogChooseDrink.show();
+                    final Button buttonOK = (Button) dialogDrinkAccepted.findViewById(R.id.buttonDrinkOk);
+                    final Button buttonCancel = (Button) dialogDrinkAccepted.findViewById(R.id.buttonDrinkCancel);
+
+                    imageViewDrink1.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            if(drink == 0){
+                                dialogDrinkAccepted.setTitle("Getränk akzeptiert?");
+                                dialogDrinkAccepted.show();
+                                buttonOK.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
+                                        dialogDrinkAccepted.dismiss();
+                                    }
+                                });
+                                buttonCancel.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        dialogDrinkAccepted.dismiss();
+                                    }
+                                });
+
                             }
-                        });
-                        buttonCancel.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                dialogDeleteTeam.dismiss();
+                        }
+                    });
+
+                    imageViewDrink2.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            if(drink == 1){
+                                dialogDrinkAccepted.setTitle("Getränk akzeptiert?");
+                                dialogDrinkAccepted.show();
+                                buttonOK.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
+                                        dialogDrinkAccepted.dismiss();
+                                    }
+                                });
+                                buttonCancel.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        dialogDrinkAccepted.dismiss();
+                                    }
+                                });
                             }
-                        });
+                        }
+                    });
 
-                    }
-                });
-
-                buttonNewTeam.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        dialogNewTeam.setTitle("Teamname wählen");
-                        Button buttonOK = (Button) dialogNewTeam.findViewById(R.id.button3);
-                        final EditText editName = (EditText) dialogNewTeam.findViewById(R.id.editText2);
-                        dialogNewTeam.show();
-                        imageViewPigClosedEyes.setImageResource(R.drawable.schwein);
-                        buttonOK.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                Teams team = new Teams();
-                                String tmp = editName.getText().toString();
-                                if(editName.getText().toString().equals(""))
-                                    team.setName("no name selected");
-                                else
-                                    team.setName(tmp);
-                                team.setDrunk(0);
-                                teamList.add(0,team);
-                                adapterTeamList.notifyDataSetChanged();
-                                editName.setText("");
-                                dialogNewTeam.dismiss();
+                    imageViewDrink3.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            if(drink == 2){
+                                dialogDrinkAccepted.setTitle("Getränk akzeptiert?");
+                                dialogDrinkAccepted.show();
+                                buttonOK.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
+                                        dialogDrinkAccepted.dismiss();
+                                    }
+                                });
+                                buttonCancel.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        dialogDrinkAccepted.dismiss();
+                                    }
+                                });
                             }
-                        });
-                    }
-                });
+                        }
+                    });
 
 
-                dialogTeamChoice.show();
+
+
+                }
+                else{
+                    blizeldiewinzel();
+                    buttonChangeName.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            dialogChangeName.setTitle("Teamname ändern");
+                            Button buttonOK = (Button) dialogChangeName.findViewById(R.id.button3);
+                            final EditText editName = (EditText) dialogChangeName.findViewById(R.id.editText2);
+                            dialogChangeName.setCanceledOnTouchOutside(true);
+                            dialogChangeName.show();
+                            buttonOK.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    String tmp = editName.getText().toString();
+                                    if (editName.getText().toString().equals(""))
+                                        teamList.get(position).setName("no name selected");
+                                    else
+                                        teamList.get(position).setName(tmp);
+                                    adapterTeamList.notifyDataSetChanged();
+                                    editName.setText("");
+                                    dialogChangeName.dismiss();
+                                }
+                            });
+                        }
+                    });
+                    buttonDeleteTeam.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            dialogDeleteTeam.setTitle("Wirklich löschen");
+                            Button buttonOK = (Button) dialogDeleteTeam.findViewById(R.id.buttonDeleteOk);
+                            Button buttonCancel = (Button) dialogDeleteTeam.findViewById(R.id.buttonDeleteCancel);
+                            dialogDeleteTeam.show();
+                            buttonOK.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    teamList.remove(position);
+                                    adapterTeamList.notifyDataSetChanged();
+                                    dialogDeleteTeam.dismiss();
+                                    dialogTeamChoice.dismiss();
+                                }
+                            });
+                            buttonCancel.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    dialogDeleteTeam.dismiss();
+                                }
+                            });
+
+                        }
+                    });
+
+                    buttonNewTeam.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            dialogNewTeam.setTitle("Teamname wählen");
+                            Button buttonOK = (Button) dialogNewTeam.findViewById(R.id.button3);
+                            final EditText editName = (EditText) dialogNewTeam.findViewById(R.id.editText2);
+                            dialogNewTeam.show();
+                            imageViewPigClosedEyes.setImageResource(R.drawable.schwein);
+                            buttonOK.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    Teams team = new Teams();
+                                    String tmp = editName.getText().toString();
+                                    if (editName.getText().toString().equals(""))
+                                        team.setName("no name selected");
+                                    else
+                                        team.setName(tmp);
+                                    team.setDrunk(0);
+                                    teamList.add(0, team);
+                                    adapterTeamList.notifyDataSetChanged();
+                                    editName.setText("");
+                                    dialogNewTeam.dismiss();
+                                }
+                            });
+                        }
+                    });
+
+
+                    dialogTeamChoice.show();
+
+                }
 
             }
         });
@@ -537,15 +660,16 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     //TEST
 
 
-    private void blizeldiewinzel(){
+    private void blizeldiewinzel() {
         hBlinzeln.postDelayed(new Runnable() {
             int zaehler = 0;
+
             @Override
             public void run() {
                 Random random = new Random();
                 delay2 = random.nextInt(4500 - 2500) + 2500;
 
-                if(imageViewPigClosedEyes.getVisibility() == View.VISIBLE)
+                if (imageViewPigClosedEyes.getVisibility() == View.VISIBLE)
                     imageViewPigClosedEyes.setVisibility(View.INVISIBLE);
                 else {
                     imageViewPigClosedEyes.setVisibility(View.VISIBLE);
@@ -553,14 +677,13 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 }
 
 
-
-               hBlinzeln.postDelayed(this, delay2);
+                hBlinzeln.postDelayed(this, delay2);
 
             }
         }, delay2);
     }
 
-    private void alarmTeam(){
+    private void alarmTeam() {
         final int delay3 = 10000;
 
         hAlert.postDelayed(new Runnable() {
@@ -573,9 +696,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 hAlert.postDelayed(this, delay3);
 
             }
-        },delay3);
+        }, delay3);
     }
-
 
 
     @Override
@@ -618,11 +740,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     public void playSong(String path) throws IllegalArgumentException,
             IllegalStateException, IOException {
-       // String extStorageDirectory = Environment.getExternalStorageDirectory()
+        // String extStorageDirectory = Environment.getExternalStorageDirectory()
         //        .toString() + "/Music/TD"; //add var folder to run on actual device!
 
-       // path = extStorageDirectory + File.separator + path;
-       //path = extStorageDirectory + path;
+        // path = extStorageDirectory + File.separator + path;
+        //path = extStorageDirectory + path;
         Log.d("path:", path);
         mediaPlayerMusic.reset();
         mediaPlayerMusic.setDataSource(path);
@@ -653,7 +775,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
-    protected void initHandlers(){
+    protected void initHandlers() {
         hTimeDate = new Handler();
         hMusic = new Handler();
     }
@@ -667,12 +789,12 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     private void toggleAlert(int posList) {
 
-        if(teamList.get(posList).getAlerted()){
+        if (teamList.get(posList).getAlerted()) {
             teamList.get(posList).setAlerted(false);
             Collections.sort(teamList, Teams.teamsComparator);
-        }else{
+        } else {
             teamList.get(posList).setAlerted(true);
-           // mp.start();
+            // mp.start();
             Collections.sort(teamList, Teams.teamsComparator);
         }
 
@@ -710,6 +832,26 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         team6.setName("Spencer Hill");
         team6.setDrunk(11);
         teamList.add(team6);
+
+        Teams team7 = new Teams();
+        team7.setName("Trump Voters");
+        team7.setDrunk(88);
+        teamList.add(team7);
+
+        Teams team8 = new Teams();
+        team8.setName("Rock n`Roll");
+        team8.setDrunk(66);
+        teamList.add(team8);
+
+        Teams team9 = new Teams();
+        team9.setName("Krobi Shinobi");
+        team9.setDrunk(18);
+        teamList.add(team9);
+
+        Teams team10 = new Teams();
+        team10.setName("BWLer");
+        team10.setDrunk(0);
+        teamList.add(team10);
         // Add some more dummy data for testing
         return teamList;
     }
@@ -754,18 +896,18 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         }
     };
 
-    public void updateSeekBar(){
+    public void updateSeekBar() {
         hMusic.postDelayed(mUpdateTimeTask, 100);
     }
 
-    private void goToUrl (String url) {
+    private void goToUrl(String url) {
         Uri uriUrl = Uri.parse(url);
         Intent launchBrowser = new Intent(Intent.ACTION_VIEW, uriUrl);
         startActivity(launchBrowser);
     }
 
     public void getMusic() { //String[]
-           //FOR ACTUAL DEVICE
+        //FOR ACTUAL DEVICE
        /* String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension("mp3");
         String selectionMimeType = MediaStore.Files.FileColumns.MIME_TYPE + "=?";
         String[] selectionArgsMp3 = new String[]{ mimeType};
@@ -781,14 +923,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
         int count = 0;
 
-        if(cur != null)
-        {
+        if (cur != null) {
             count = cur.getCount();
 
-            if(count > 0)
-            {
-                while(cur.moveToNext())
-                {
+            if (count > 0) {
+                while (cur.moveToNext()) {
                     String data = cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA));
                     music.add(data);
                     // Add code to get more column here
@@ -816,9 +955,50 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
         mCursor.close();
 */
-       // return songs;
+        // return songs;
     }
 
+    @Override
+    public void onMapReady(GoogleMap map) {
+        map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        map.setMyLocationEnabled(true);
+
+            map.addMarker(new MarkerOptions()
+            .position(new LatLng(49.227743, 7.480724))
+                    .title("Scheierfeschd")
+                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)));
+            UiSettings settings =  map.getUiSettings();
+            settings.setZoomControlsEnabled(true);
+            settings.setIndoorLevelPickerEnabled(false);
+            settings.setMapToolbarEnabled(false);
+
+
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
 }
 
 class Mp3Filter implements FilenameFilter{

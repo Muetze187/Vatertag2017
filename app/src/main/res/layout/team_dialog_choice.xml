@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+    android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/dialog_border">
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="200dp"
+        android:layout_height="120dp"
         android:text="Name ändern"
         android:id="@+id/buttonChangeName"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:textColor="#ffaaab" />
+        android:textColor="#ffaaab"
+        android:textSize="24sp" />
 
     <Button
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="120dp"
         android:text="Löschen"
         android:id="@+id/buttonDelete"
         android:layout_below="@+id/buttonChangeName"
@@ -22,11 +23,12 @@
         android:layout_alignParentStart="true"
         android:layout_alignRight="@+id/buttonChangeName"
         android:layout_alignEnd="@+id/buttonChangeName"
-        android:textColor="#ffaaab" />
+        android:textColor="#ffaaab"
+        android:textSize="24sp" />
 
     <Button
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="120dp"
         android:text="Neues Team"
         android:id="@+id/buttonNewTeam"
         android:layout_below="@+id/buttonDelete"
@@ -34,21 +36,22 @@
         android:layout_alignParentStart="true"
         android:layout_alignRight="@+id/buttonDelete"
         android:layout_alignEnd="@+id/buttonDelete"
-        android:textColor="#ffaaab" />
+        android:textColor="#ffaaab"
+        android:textSize="24sp" />
 
     <ImageView
-        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:id="@+id/imageViewPigOpenEyes"
         android:layout_toRightOf="@+id/buttonChangeName"
         android:src="@drawable/schwein"
-        android:layout_alignBottom="@+id/buttonNewTeam" />
+        android:layout_alignBottom="@+id/buttonNewTeam"
+        android:layout_width="200dp" />
     <ImageView
-        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:id="@+id/imageViewPigClosedEyes"
         android:layout_toRightOf="@+id/buttonChangeName"
         android:src="@drawable/schweinaugenzu"
-        android:layout_alignBottom="@+id/buttonNewTeam" />
+        android:layout_alignBottom="@+id/buttonNewTeam"
+        android:layout_width="200dp" />
 
 </RelativeLayout>

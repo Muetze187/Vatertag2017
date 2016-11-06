@@ -11,6 +11,7 @@
         android:layout_height="wrap_content"
         android:textStyle="bold"
         android:textColor="#ff8800"
+        android:textSize="22sp"
         android:typeface="sans" />
 
     <TextView
@@ -20,11 +21,11 @@
         android:layout_below="@id/name"
         android:layout_marginTop="5dip"
         android:textColor="#ff8800"
-        android:textSize="12sp" />
+        android:textSize="16sp" />
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="220dp"
+        android:layout_marginLeft="360dp"
         android:id="@+id/alert" />
 
 </RelativeLayout>
