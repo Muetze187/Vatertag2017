@@ -6,7 +6,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
@@ -48,6 +51,8 @@ public class CustomListAdapter extends BaseAdapter {
             holder.headlineView = (TextView) convertView.findViewById(R.id.name);
             holder.reporterNameView = (TextView) convertView.findViewById(R.id.drunk);
             holder.imageView = (ImageView) convertView.findViewById(R.id.alert);
+            holder.progressDrunk = (ProgressBar) convertView.findViewById(R.id.progressDrunk);
+            holder.strackLevel = (TextView) convertView.findViewById(R.id.strackStatus);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
@@ -56,6 +61,8 @@ public class CustomListAdapter extends BaseAdapter {
         holder.headlineView.setText(listData.get(position).getName());
         holder.reporterNameView.setText(listData.get(position).getDrunk());
         holder.imageView.setImageResource(listData.get(position).getView());
+        holder.strackLevel.setText(listData.get(position).getStrackLevelName());
+        holder.progressDrunk.setProgress(listData.get(position).getProgressStrack());
         if(listData.get(position).getAlerted())
             holder.imageView.startAnimation(listData.get(position).animation);
 
@@ -66,6 +73,8 @@ public class CustomListAdapter extends BaseAdapter {
         TextView headlineView;
         TextView reporterNameView;
         ImageView imageView;
+        ProgressBar progressDrunk;
+        TextView strackLevel;
 
     }
 

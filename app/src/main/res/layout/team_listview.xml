@@ -22,10 +22,34 @@
         android:layout_marginTop="5dip"
         android:textColor="#ff8800"
         android:textSize="16sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/strackStatus"
+        android:layout_marginLeft="120dip"
+        android:textColor="#ff8800"
+        android:textSize="16sp"
+        android:layout_alignParentBottom="true" />
+
+    <ProgressBar
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressDrunk"
+        android:layout_marginLeft="220dp"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_alignParentBottom="true"
+        android:max="100"
+        android:progressTint="@color/colorPink" />
+
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="360dp"
         android:id="@+id/alert" />
+
+
+
+
 
 </RelativeLayout>

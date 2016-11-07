@@ -9,24 +9,26 @@
         android:layout_height="wrap_content"
         android:id="@+id/textView5"
         android:textSize="28dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
         android:textColor="@color/colorPink" />
 
     <Button
         style="?android:attr/buttonStyleSmall"
-        android:layout_width="96dp"
-        android:layout_height="wrap_content"
+        android:layout_width="200dp"
+        android:layout_height="120dp"
         android:text="Jup"
         android:id="@+id/buttonDrinkOk"
+        android:layout_marginTop="10dp"
         android:layout_below="@+id/textView5"
         android:layout_alignParentStart="true" />
 
     <Button
         style="?android:attr/buttonStyleSmall"
-        android:layout_width="96dp"
-        android:layout_height="wrap_content"
+        android:layout_width="200dp"
+        android:layout_height="120dp"
         android:text="Nä ne"
         android:id="@+id/buttonDrinkCancel"
-        android:layout_below="@+id/textView5"
-        android:layout_toEndOf="@+id/buttonDeleteOk"
-        android:layout_marginStart="98dp" />
+        android:layout_alignTop="@+id/buttonDrinkOk"
+        android:layout_alignParentEnd="true" />
 </RelativeLayout>

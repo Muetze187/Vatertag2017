@@ -3,7 +3,6 @@ package com.helfholz.muetze187.vatertag2017;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.ContentResolver;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -11,7 +10,6 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
-import android.location.Location;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -21,7 +19,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -34,6 +31,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -41,15 +39,11 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.UiSettings;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -63,8 +57,6 @@ import java.util.Date;
 import java.util.Random;
 import java.util.TimeZone;
 
-import static com.helfholz.muetze187.vatertag2017.R.id.map;
-
 public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener, MediaPlayer.OnCompletionListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     //Gui Elements
@@ -73,7 +65,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     TextView adelheid;
     ListView listViewTeams;
     TextView textViewAmountDrink;
+    TextView textViewGlueckwunsch;
     final String DRINKAMOUNT = "Zu trinkende Menge: ";
+    final String GLUECKWUNSCH = "Glückwunsch! Dies wird euer ";
     int currentSong;
     CustomListAdapter adapterTeamList;
     ArrayAdapter<String> adapterSpinner;
@@ -97,9 +91,17 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     SimpleDateFormat dateFormat;
     String s;
     Button buttonLoad, buttonSave;
+    Button buttonRandomDrink;
     static MediaPlayer mediaPlayerMusic;
     MediaPlayer mp;
     //TESTS
+    int drink;
+    int oldDrink = -1;
+    int hasChoosen = 0;
+    int tmp;
+    int amountToDrink = 2;
+    int progress;
+    boolean hadChanceDrink1 = false, isHadChanceDrink2 = false, isHadChanceDrink3 = false;
     Spinner spinner;
     Dialog dialogChangeName;
     Dialog dialogNewTeam;
@@ -255,6 +257,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         imageViewDrink2 = (ImageView) dialogChooseDrink.findViewById(R.id.imageView2);
         imageViewDrink3 = (ImageView) dialogChooseDrink.findViewById(R.id.imageView3);
 
+        progress = 0;
 
         audioManager = (AudioManager) getSystemService(this.AUDIO_SERVICE);
 
@@ -277,7 +280,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         mediaPlayerMusic.setOnCompletionListener(this);
 
         mp = MediaPlayer.create(this, R.raw.schweinquieken);
-
+        buttonRandomDrink = (Button) dialogChooseDrink.findViewById(R.id.buttonRandom);
         //TESTS
         buttonLoad.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -462,29 +465,66 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 Button buttonDeleteTeam = (Button) dialogTeamChoice.findViewById(R.id.buttonDelete);
                 Button buttonNewTeam = (Button) dialogTeamChoice.findViewById(R.id.buttonNewTeam);
                 textViewAmountDrink = (TextView) dialogChooseDrink.findViewById(R.id.textViewMengeDrink);
+                textViewGlueckwunsch = (TextView) dialogChooseDrink.findViewById(R.id.textViewGlueckwunsch);
 
-                if(teamList.get(position).getAlerted()) {
-                    Random rnd = new Random();
-                    String amountDrink = 2 + " cl";
-                    textViewAmountDrink.setText(DRINKAMOUNT + amountDrink);
-                    final int drink = rnd.nextInt(3);
-                    Log.d("drink","drink" +drink);
-                    switch(drink){
-                        case 0:
-                            imageViewDrink1.setImageResource(R.drawable.number1_pink);
-                            imageViewDrink2.setImageResource(R.drawable.number2);
-                            imageViewDrink3.setImageResource(R.drawable.number3);
-                            break;
-                        case 1:
-                            imageViewDrink2.setImageResource(R.drawable.number2_pink);
-                            imageViewDrink1.setImageResource(R.drawable.number1);
-                            imageViewDrink3.setImageResource(R.drawable.number3);
-                            break;
-                        case 2:
-                            imageViewDrink3.setImageResource(R.drawable.number3_pink);
-                            imageViewDrink1.setImageResource(R.drawable.number1);
-                            imageViewDrink2.setImageResource(R.drawable.number2);
+                buttonRandomDrink.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        //Log.d("haschoosen","haschoosen beginn Mischen" +hasChoosen);
+                        hasChoosen++;
+                        amountToDrink *= 2;
+                        textViewAmountDrink.setText(DRINKAMOUNT + amountToDrink +" cl");
+
+                        Log.d("drink","drink beginn Mischen" +drink);
+                        Log.d("drink","OLDdrink beginn Mischen" +oldDrink);
+                        Log.d("drink","TMP beginn Mischen" +tmp);
+                        Log.d("drink","Amount beginn Mischen" +amountToDrink);
+
+                        if(drink == 0)
+                            imageViewDrink1.setColorFilter(Color.RED);
+                        if(drink == 1)
+                            imageViewDrink2.setColorFilter(Color.RED);
+                        if(drink == 2)
+                            imageViewDrink3.setColorFilter(Color.RED);
+                        if(hasChoosen < 2){
+                            getRandomDrink();
+                        }
+                        else
+                        {
+                            if((tmp == 0 && drink == 1) || (tmp  == 1 && drink == 0)){
+                                imageViewDrink1.setColorFilter(Color.RED);
+                                imageViewDrink2.setColorFilter(Color.RED);
+                                imageViewDrink3.setColorFilter(Color.GREEN);
+                            }else if((tmp  == 0 && drink == 2 ) || (drink == 0 && tmp == 2)){
+                                imageViewDrink1.setColorFilter(Color.RED);
+                                imageViewDrink2.setColorFilter(Color.GREEN);
+                                imageViewDrink3.setColorFilter(Color.RED);
+                            }else{
+                                imageViewDrink1.setColorFilter(Color.GREEN);
+                                imageViewDrink2.setColorFilter(Color.RED);
+                                imageViewDrink3.setColorFilter(Color.RED);
+                            }
+
+                            buttonRandomDrink.setText("Prost!");
+                            buttonRandomDrink.setClickable(false);
+                            buttonRandomDrink.setEnabled(false);
+                            teamList.get(position).increaseStrackLevel(10);
+                            adapterTeamList.notifyDataSetChanged();
+
+                        }
+
                     }
+                });
+                if(teamList.get(position).getAlerted()) {
+                    //Random rnd = new Random();
+                    resetDrinkDialog();
+                    textViewAmountDrink.setText(DRINKAMOUNT + amountToDrink +" cl");
+                    textViewGlueckwunsch.setText(GLUECKWUNSCH + teamList.get(position).getDrunkPlain() + ". Schnaps sein!");
+                    //int drink = rnd.nextInt(3);
+                    getRandomDrink();
+                    oldDrink = drink;
+                    Log.d("drink","drink initial" +drink);
+
 
                     dialogChooseDrink.show();
                     final Button buttonOK = (Button) dialogDrinkAccepted.findViewById(R.id.buttonDrinkOk);
@@ -494,7 +534,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         @Override
                         public void onClick(View view) {
                             if(drink == 0){
-                                dialogDrinkAccepted.setTitle("Getränk akzeptiert?");
                                 dialogDrinkAccepted.show();
                                 buttonOK.setOnClickListener(new View.OnClickListener() {
                                     @Override
@@ -506,7 +545,12 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                 buttonCancel.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
-                                        dialogDrinkAccepted.dismiss();
+                                            dialogDrinkAccepted.dismiss();
+                                           /* oldDrink = drink;
+                                            Log.d("drink","drink click0" +drink);
+                                            imageViewDrink1.setColorFilter(Color.RED);
+                                            hadChanceDrink1 = true;
+                                            getRandomDrink();*/
                                     }
                                 });
 
@@ -518,7 +562,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         @Override
                         public void onClick(View view) {
                             if(drink == 1){
-                                dialogDrinkAccepted.setTitle("Getränk akzeptiert?");
                                 dialogDrinkAccepted.show();
                                 buttonOK.setOnClickListener(new View.OnClickListener() {
                                     @Override
@@ -531,6 +574,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                     @Override
                                     public void onClick(View view) {
                                         dialogDrinkAccepted.dismiss();
+                                      /*  oldDrink = drink;
+                                        Log.d("drink","drink click1" +drink);
+                                        imageViewDrink2.setColorFilter(Color.RED);
+                                        getRandomDrink();*/
                                     }
                                 });
                             }
@@ -541,7 +588,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         @Override
                         public void onClick(View view) {
                             if(drink == 2){
-                                dialogDrinkAccepted.setTitle("Getränk akzeptiert?");
                                 dialogDrinkAccepted.show();
                                 buttonOK.setOnClickListener(new View.OnClickListener() {
                                     @Override
@@ -554,6 +600,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                     @Override
                                     public void onClick(View view) {
                                         dialogDrinkAccepted.dismiss();
+                                       /* oldDrink = drink;
+                                        Log.d("drink","drink click2" +drink);
+                                        imageViewDrink3.setColorFilter(Color.RED);
+                                        getRandomDrink();*/
                                     }
                                 });
                             }
@@ -654,6 +704,52 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         showTimeAndDate();
         alarmTeam();
 
+    }
+
+    private void resetDrinkDialog(){
+        hasChoosen = 0;
+        drink = -1;
+        imageViewDrink1.setColorFilter(Color.TRANSPARENT);
+        imageViewDrink2.setColorFilter(Color.TRANSPARENT);
+        imageViewDrink3.setColorFilter(Color.TRANSPARENT);
+        tmp = -1;
+        amountToDrink = 2;
+        buttonRandomDrink.setEnabled(true);
+        buttonRandomDrink.setText("Mischen");
+        buttonRandomDrink.setClickable(true);
+    }
+
+    private void getRandomDrink() {
+
+        Random rnd = new Random();
+        //int drink;
+        tmp = drink;
+        drink = rnd.nextInt(3);
+        Log.d("drink","drink methode" +drink);
+        if((drink == oldDrink)){
+            getRandomDrink();
+        }
+        else{
+            switch(drink){
+                case 0:
+                    imageViewDrink1.setImageResource(R.drawable.number1_pink);
+                    imageViewDrink2.setImageResource(R.drawable.number2);
+                    imageViewDrink3.setImageResource(R.drawable.number3);
+                    break;
+                case 1:
+                    imageViewDrink2.setImageResource(R.drawable.number2_pink);
+                    imageViewDrink1.setImageResource(R.drawable.number1);
+                    imageViewDrink3.setImageResource(R.drawable.number3);
+                    break;
+                case 2:
+                    imageViewDrink3.setImageResource(R.drawable.number3_pink);
+                    imageViewDrink1.setImageResource(R.drawable.number1);
+                    imageViewDrink2.setImageResource(R.drawable.number2);
+            }
+        }
+
+        oldDrink = drink;
+        //return drink;
     }
 
 
