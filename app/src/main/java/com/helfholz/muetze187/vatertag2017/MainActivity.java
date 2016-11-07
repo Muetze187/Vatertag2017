@@ -3,6 +3,7 @@ package com.helfholz.muetze187.vatertag2017;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -13,6 +14,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.os.Bundle;
@@ -31,7 +33,6 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -262,8 +263,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         audioManager = (AudioManager) getSystemService(this.AUDIO_SERVICE);
 
 
-        hBlinzeln = new Handler();
-        hAlert = new Handler();
+
         adapterTeamList = new CustomListAdapter(this, image_details);
         //mAdapter= new ArrayAdapter<String>(this,
         //        android.R.layout.simple_list_item_1, musicTrimmed);
@@ -505,11 +505,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                 imageViewDrink3.setColorFilter(Color.RED);
                             }
 
-                            buttonRandomDrink.setText("Prost!");
-                            buttonRandomDrink.setClickable(false);
-                            buttonRandomDrink.setEnabled(false);
-                            teamList.get(position).increaseStrackLevel(10);
-                            adapterTeamList.notifyDataSetChanged();
+                            finishDialogChooseDrink(position);
 
                         }
 
@@ -540,17 +536,13 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                     public void onClick(View view) {
                                         Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
                                         dialogDrinkAccepted.dismiss();
+                                        finishDialogChooseDrink(position);
                                     }
                                 });
                                 buttonCancel.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
                                             dialogDrinkAccepted.dismiss();
-                                           /* oldDrink = drink;
-                                            Log.d("drink","drink click0" +drink);
-                                            imageViewDrink1.setColorFilter(Color.RED);
-                                            hadChanceDrink1 = true;
-                                            getRandomDrink();*/
                                     }
                                 });
 
@@ -568,16 +560,14 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                     public void onClick(View view) {
                                         Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
                                         dialogDrinkAccepted.dismiss();
+                                        finishDialogChooseDrink(position);
                                     }
                                 });
                                 buttonCancel.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
                                         dialogDrinkAccepted.dismiss();
-                                      /*  oldDrink = drink;
-                                        Log.d("drink","drink click1" +drink);
-                                        imageViewDrink2.setColorFilter(Color.RED);
-                                        getRandomDrink();*/
+
                                     }
                                 });
                             }
@@ -594,16 +584,13 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                     public void onClick(View view) {
                                         Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
                                         dialogDrinkAccepted.dismiss();
+                                        finishDialogChooseDrink(position);
                                     }
                                 });
                                 buttonCancel.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
                                         dialogDrinkAccepted.dismiss();
-                                       /* oldDrink = drink;
-                                        Log.d("drink","drink click2" +drink);
-                                        imageViewDrink3.setColorFilter(Color.RED);
-                                        getRandomDrink();*/
                                     }
                                 });
                             }
@@ -717,6 +704,30 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         buttonRandomDrink.setEnabled(true);
         buttonRandomDrink.setText("Mischen");
         buttonRandomDrink.setClickable(true);
+    }
+
+    private void finishDialogChooseDrink(int pos){
+        buttonRandomDrink.setText("Prost!");
+        buttonRandomDrink.setClickable(false);
+        buttonRandomDrink.setEnabled(false);
+        teamList.get(pos).increaseStrackLevel(10);
+        adapterTeamList.notifyDataSetChanged();
+        new CountDownTimer(5000, 1000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void onFinish() {
+                // TODO Auto-generated method stub
+
+                dialogChooseDrink.dismiss();
+            }
+        }.start();
+
     }
 
     private void getRandomDrink() {
@@ -874,6 +885,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     protected void initHandlers() {
         hTimeDate = new Handler();
         hMusic = new Handler();
+        hBlinzeln = new Handler();
+        hAlert = new Handler();
     }
 
     protected void setupDateFormat() {
