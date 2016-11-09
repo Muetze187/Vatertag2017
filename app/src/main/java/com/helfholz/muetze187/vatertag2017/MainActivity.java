@@ -3,8 +3,10 @@ package com.helfholz.muetze187.vatertag2017;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -16,8 +18,10 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.os.Bundle;
+import android.provider.SyncStateContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -47,14 +51,19 @@ import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
 
@@ -102,6 +111,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     int tmp;
     int amountToDrink = 2;
     int progress;
+    int counter = 0;
+    int winnerDrink;
+    SharedPreferences prefs;
+    Gson gson;
+    String jsonTeams;
     boolean hadChanceDrink1 = false, isHadChanceDrink2 = false, isHadChanceDrink3 = false;
     Spinner spinner;
     Dialog dialogChangeName;
@@ -117,7 +131,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     public static AudioManager audioManager;
     private GoogleApiClient mGoogleApiClient;
 
-    //TeamSaver teamSaver;
+    TeamSaver teamSaver;
 
 
     @Override
@@ -188,9 +202,25 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     .addApi(LocationServices.API)
                     .build();
         }*/
+
         //init GUI
         textViewDateTime = (TextView) findViewById(R.id.textViewDateTime);
         textFett = (TextView) findViewById(R.id.textViewFett);
+        textFett.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, BlauzahnActivity.class);
+                startActivity(intent);
+                if(counter == 3){
+
+                    counter = 0;
+                }else{
+                    counter++;
+                }
+
+
+            }
+        });
         adelheid = (TextView) findViewById(R.id.textView2);
         play = (ImageButton) findViewById(R.id.play);
         prev = (ImageButton) findViewById(R.id.prev);
@@ -207,8 +237,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             musicTrimmed.add(a.substring(25));
         }
 
-        buttonLoad = (Button) findViewById(R.id.buttonLaden);
-        buttonSave = (Button) findViewById(R.id.buttonSpeichern);
+       // buttonLoad = (Button) findViewById(R.id.buttonLaden);
+        //buttonSave = (Button) findViewById(R.id.buttonSpeichern);
         //TESTS
         spinner = (Spinner) findViewById(R.id.spinner);
         adapterSpinner = new ArrayAdapter<String>(this,
@@ -238,12 +268,12 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         dialogDeleteTeam.setCancelable(true);
         dialogChooseDrink = new Dialog(MainActivity.this);
         dialogChooseDrink.setContentView(R.layout.choose_drink);
-        dialogChooseDrink.setCanceledOnTouchOutside(true);
+        dialogChooseDrink.setCanceledOnTouchOutside(false);
         dialogChooseDrink.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialogDrinkAccepted = new Dialog(MainActivity.this);
         dialogDrinkAccepted.setContentView(R.layout.drink_acception);
         dialogDrinkAccepted.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        //teamSaver = new TeamSaver(getApplicationContext());
+        teamSaver = new TeamSaver();
 
         //music seekbar
         seekBarMusic = (SeekBar) findViewById(R.id.seekBarMusic);
@@ -282,20 +312,33 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         mp = MediaPlayer.create(this, R.raw.schweinquieken);
         buttonRandomDrink = (Button) dialogChooseDrink.findViewById(R.id.buttonRandom);
         //TESTS
-        buttonLoad.setOnClickListener(new View.OnClickListener() {
+     /*   buttonLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //teamList = teamSaver.loadTeams("teams");
+               // teamList = teamSaver.loadTeams(getApplicationContext());
                 //adapterTeamList.notifyDataSetChanged();
+             *//*   prefs = getApplicationContext().getSharedPreferences("Teams", getApplicationContext().MODE_PRIVATE);
+                gson = new Gson();
+                jsonTeams = prefs.getString("myJson", "");
+                if(jsonTeams.isEmpty()){
+                    teamList = new ArrayList<Teams>();
+                }else {
+                    Type type = new TypeToken<List<Teams>>() {
+                    }.getType();
+                    teamList = gson.fromJson(jsonTeams, type);*//*
+                //}
+
             }
         });
 
         buttonSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //teamSaver.saveTeams("teams", teamList);
+                //teamSaver.saveTeams(getApplicationContext(),teamList);
+
             }
-        });
+
+        });*/
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -471,6 +514,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     @Override
                     public void onClick(View view) {
                         //Log.d("haschoosen","haschoosen beginn Mischen" +hasChoosen);
+
                         hasChoosen++;
                         amountToDrink *= 2;
                         textViewAmountDrink.setText(DRINKAMOUNT + amountToDrink +" cl");
@@ -536,6 +580,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                     public void onClick(View view) {
                                         Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
                                         dialogDrinkAccepted.dismiss();
+                                        winnerDrink = 1;
                                         finishDialogChooseDrink(position);
                                     }
                                 });
@@ -560,6 +605,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                     public void onClick(View view) {
                                         Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
                                         dialogDrinkAccepted.dismiss();
+                                        winnerDrink = 2;
                                         finishDialogChooseDrink(position);
                                     }
                                 });
@@ -584,6 +630,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                     public void onClick(View view) {
                                         Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
                                         dialogDrinkAccepted.dismiss();
+                                        winnerDrink = 3;
                                         finishDialogChooseDrink(position);
                                     }
                                 });
@@ -704,14 +751,33 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         buttonRandomDrink.setEnabled(true);
         buttonRandomDrink.setText("Mischen");
         buttonRandomDrink.setClickable(true);
+        imageViewDrink1.setEnabled(true);
+        imageViewDrink2.setEnabled(true);
+        imageViewDrink3.setEnabled(true);
     }
 
     private void finishDialogChooseDrink(int pos){
         buttonRandomDrink.setText("Prost!");
-        buttonRandomDrink.setClickable(false);
         buttonRandomDrink.setEnabled(false);
+        imageViewDrink1.setEnabled(false);
+        imageViewDrink2.setEnabled(false);
+        imageViewDrink3.setEnabled(false);
+
         teamList.get(pos).increaseStrackLevel(10);
-        adapterTeamList.notifyDataSetChanged();
+        teamList.get(pos).setDrunk(teamList.get(pos).getDrunkPlain());
+
+        switch (winnerDrink){
+            case 1:
+                teamList.get(pos).setCounterOne(teamList.get(pos).getCounterOne() + 1);
+                break;
+            case 2:
+                teamList.get(pos).setCounterTwo(teamList.get(pos).getCounterTwo() + 1);
+                break;
+            case 3:
+                teamList.get(pos).setCounterThree(teamList.get(pos).getCounterThree() + 1);
+                break;
+        }
+
         new CountDownTimer(5000, 1000) {
 
             @Override
@@ -725,6 +791,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 // TODO Auto-generated method stub
 
                 dialogChooseDrink.dismiss();
+                adapterTeamList.notifyDataSetChanged();
             }
         }.start();
 
@@ -942,7 +1009,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         team6.setDrunk(11);
         teamList.add(team6);
 
-        Teams team7 = new Teams();
+        /*Teams team7 = new Teams();
         team7.setName("Trump Voters");
         team7.setDrunk(88);
         teamList.add(team7);
@@ -960,7 +1027,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         Teams team10 = new Teams();
         team10.setName("BWLer");
         team10.setDrunk(0);
-        teamList.add(team10);
+        teamList.add(team10);*/
         // Add some more dummy data for testing
         return teamList;
     }
@@ -1090,7 +1157,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             settings.setZoomControlsEnabled(true);
             settings.setIndoorLevelPickerEnabled(false);
             settings.setMapToolbarEnabled(false);
-
 
     }
 

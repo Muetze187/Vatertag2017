@@ -21,13 +21,15 @@ public class Teams{
 
     private String name;
 
-    private String strackLevel = "Stracklevel: ";
-    private int drunk;
-    private int view = 0;
-    private boolean isAlerted = false;
+    private String strackLevel;
+    private String vielfalt;
+    private int drunk, counterOne, counterTwo, counterThree;
+    String formattedOne, formattedTwo, formattedThree;
+    private int view;
+    private boolean isAlerted;
     Animation animation;
-    private ProgressBar progressBarStrack;
-    int progressStrack = 0;
+    int progressStrack;
+
 
     public Teams(){
         animation = new AlphaAnimation(1, 0);
@@ -35,7 +37,54 @@ public class Teams{
         animation.setInterpolator(new LinearInterpolator());
         animation.setRepeatCount(Animation.INFINITE);
         animation.setRepeatMode(Animation.REVERSE);
+        strackLevel = "Stracklevel: ";
+        vielfalt = "Verteilung: ";
+        isAlerted = false;
+        progressStrack = 0;
+        drunk = 0;
+        counterOne = 0;
+        counterTwo = 0;
+        counterThree = 0;
+        view = 0;
+    }
 
+    public int getCounterOne(){
+        return counterOne;
+    }
+
+    public int getCounterTwo(){
+        return counterTwo;
+    }
+
+    public int getCounterThree(){
+        return counterThree;
+    }
+
+    public String getCounterOneFormatted(){
+        formattedOne = String.format("%02d", counterOne);
+        return formattedOne;
+    }
+
+    public String getCounterTwoFormatted(){
+        formattedTwo = String.format("%02d", counterTwo);
+        return formattedTwo;
+    }
+
+    public String getCounterThreeFormatted(){
+        formattedThree = String.format("%02d", counterThree);
+        return formattedThree;
+    }
+
+    public void setCounterOne(int amount){
+        this.counterOne = amount;
+    }
+
+    public void setCounterTwo(int amount){
+        this.counterTwo = amount;
+    }
+
+    public void setCounterThree(int amount){
+        this.counterThree = amount;
     }
 
     public String getName(){
@@ -50,9 +99,6 @@ public class Teams{
         return strackLevel;
     }
 
-    public void setStrackLevelName(String name){
-        this.strackLevel = name;
-    }
 
     public void increaseStrackLevel(int level){
         progressStrack += level;
@@ -68,6 +114,10 @@ public class Teams{
 
     public int getDrunkPlain(){
         return drunk+1;
+    }
+
+    public String getVielfalt(){
+        return vielfalt;
     }
 
     public void setDrunk(int drunk){

@@ -12,46 +12,35 @@
 
 
     <ListView
-        android:layout_width="wrap_content"
+        android:layout_width="400dp"
         android:layout_height="wrap_content"
         android:id="@+id/listViewTeams"
-        android:layout_alignParentStart="true"
         android:divider="@android:color/holo_orange_dark"
         android:dividerHeight="4dp"
-        android:layout_toStartOf="@+id/textView"
-        android:layout_below="@+id/textViewDateTime"
-        android:layout_above="@+id/buttonSpeichern"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="100dp"
         android:layout_marginBottom="20dp"
-        android:layout_alignRight="@+id/spinner"
-        android:layout_alignEnd="@+id/spinner" />
+        android:layout_alignParentStart="true" />
+
+    <View
+        android:layout_width="1dp"
+        android:id="@+id/dividerLeft"
+        android:layout_height="match_parent"
+        android:background="@android:color/holo_orange_light"
+        android:layout_toEndOf="@id/listViewTeams" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/f_e_t_t"
         android:id="@+id/textViewFett"
-        android:width="200dp"
-        android:height="80dp"
+        android:width="250dp"
+        android:height="100dp"
         android:paddingTop="10dp"
         android:textColor="@android:color/holo_orange_dark"
-        android:textSize="48sp"
+        android:textSize="72sp"
         android:clickable="false"
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/textViewDateTime"
-        android:width="100dp"
-        android:height="80dp"
-        android:paddingTop="10dp"
-        android:textSize="18sp"
-        android:layout_alignTop="@+id/textViewFett"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="10dp"
-        android:textColor="@android:color/holo_orange_dark" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -66,51 +55,15 @@
         android:text="@string/powered_by_adelheid"
         android:id="@+id/textView2"
         android:textColor="@android:color/holo_orange_dark"
-        android:textSize="12sp"
+        android:textSize="16sp"
+        android:layout_alignParentTop="true"
         android:layout_alignBottom="@+id/textViewFett"
         android:layout_alignParentStart="true"
         android:layout_marginStart="4dp" />
 
-    <SeekBar
-        android:layout_width="216dp"
-        android:layout_height="wrap_content"
-        android:id="@+id/seekBarMusic"
-        android:thumb="@drawable/schweinrechts2"
-        android:progressBackgroundTint="#ffaaab"
-        android:layout_above="@+id/textView2"
-        android:layout_toEndOf="@+id/textViewFett" />
-
-
     <ImageButton
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:id="@+id/prev"
-        android:scaleType="center"
-        android:background="@drawable/ic_backwards"
-        android:layout_alignParentTop="true"
-        android:layout_toEndOf="@+id/textViewFett"
-        android:contentDescription="@string/backwards" />
-
-    <Spinner
-        android:layout_width="108dp"
-        android:layout_height="wrap_content"
-        android:id="@+id/spinner"
-        android:layout_below="@+id/seekBarMusic"
-        android:layout_alignEnd="@+id/shuffle"
-        android:layout_toEndOf="@+id/textViewFett" />
-
-    <Button
-        android:layout_width="108dp"
-        android:layout_height="wrap_content"
-        android:text="@string/speichern"
-        android:id="@+id/buttonSpeichern"
-        android:textSize="12sp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignStart="@+id/textView2" />
-
-    <ImageButton
-        android:layout_width="52dp"
-        android:layout_height="52dp"
+        android:layout_width="88dp"
+        android:layout_height="88dp"
         android:id="@+id/play"
         android:scaleType="center"
         android:background="@drawable/ic_play"
@@ -120,8 +73,8 @@
         android:layout_toEndOf="@+id/prev" />
 
     <ImageButton
-        android:layout_width="52dp"
-        android:layout_height="52dp"
+        android:layout_width="88dp"
+        android:layout_height="88dp"
         android:id="@+id/next"
         android:scaleType="center"
         android:background="@drawable/ic_forward"
@@ -129,18 +82,7 @@
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/play"
         android:layout_toEndOf="@+id/play" />
-
-    <ImageButton
-        android:layout_width="26dp"
-        android:layout_height="36dp"
-        android:id="@+id/shuffle"
-        android:scaleType="center"
-        android:background="@drawable/ic_shuffle"
-        android:contentDescription="@string/shuffle"
-        android:layout_alignTop="@+id/textViewDateTime"
-        android:layout_alignRight="@+id/seekBarMusic"
-        android:layout_alignEnd="@+id/seekBarMusic" />
-
+<!--
     <Button
         android:layout_width="108dp"
         android:layout_height="wrap_content"
@@ -163,14 +105,85 @@
         android:layout_toEndOf="@+id/textView2"
         android:layout_marginStart="34dp" />
 
+        <Button
+        android:layout_width="108dp"
+        android:layout_height="wrap_content"
+        android:text="@string/speichern"
+        android:id="@+id/buttonSpeichern"
+        android:textSize="12sp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignStart="@+id/textView2" />
+-->
 
-    <fragment
+    <SeekBar
+        android:layout_width="216dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/seekBarMusic"
+        android:thumb="@drawable/schweinrechts2"
+        android:progressBackgroundTint="#ffaaab"
+        android:layout_below="@+id/play"
+        android:layout_alignEnd="@+id/next"
+        android:layout_toEndOf="@+id/textView"
+        android:layout_alignStart="@+id/prev" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/holo_orange_light"
+        android:id="@+id/dividerTop"
+        android:layout_below="@+id/seekBarMusic"
+        android:layout_marginTop="6dp"
+        android:layout_toEndOf="@+id/listViewTeams"/>
+
+    <ImageButton
+        android:layout_width="88dp"
+        android:layout_height="88dp"
+        android:id="@+id/prev"
+        android:scaleType="center"
+        android:background="@drawable/ic_backwards"
+        android:contentDescription="@string/backwards"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/listViewTeams" />
+
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:id="@+id/textViewDateTime"
+        android:width="100dp"
+        android:height="80dp"
+        android:paddingTop="10dp"
+        android:textSize="18sp"
+        android:textColor="@android:color/holo_orange_dark"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true" />
+
+    <Spinner
+        android:layout_width="340dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/spinner"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/shuffle"
+        android:layout_marginTop="19dp" />
+
+    <ImageButton
+        android:layout_width="26dp"
+        android:layout_height="36dp"
+        android:id="@+id/shuffle"
+        android:scaleType="center"
+        android:background="@drawable/ic_shuffle"
+        android:contentDescription="@string/shuffle"
+        android:layout_alignBottom="@+id/seekBarMusic"
+        android:layout_toEndOf="@+id/next" />
+
+    <fragment
+        android:layout_width="400dp"
+        android:layout_height="400dp"
         android:name="com.google.android.gms.maps.MapFragment"
-        android:layout_below="@+id/textView"
-        android:layout_toEndOf="@+id/textView"
-        android:id="@+id/map" />
+        android:id="@+id/map"
+        android:layout_marginTop="12dp"
+        android:layout_marginLeft="12dp"
+        android:layout_below="@+id/dividerTop"
+        android:layout_toEndOf="@+id/dividerLeft" />
 
 
 </RelativeLayout>

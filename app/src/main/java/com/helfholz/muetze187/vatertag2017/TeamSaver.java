@@ -9,33 +9,48 @@ import com.google.gson.Gson;
 import org.json.JSONArray;
 import org.json.JSONException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
  * Created by Muetze187 on 09.07.2016.
  */
 public class TeamSaver {
-    Context context;
-    SharedPreferences prefs;
-    SharedPreferences.Editor editor;
+    public static final String PREFS_NAME = "NKDROID_APP";
+    public static final String TEAMS = "Teams";
 
-    public TeamSaver(Context context){
-        this.context = context;
-        prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        editor = prefs.edit();
+    public TeamSaver(){
+       super();
+
     }
 
-    public void saveTeams(String key, ArrayList<Teams> list){
-       Set<Teams> set = new HashSet<Teams>();
-        set.addAll(list);
-       // editor.remove(key);
-        editor.putString(key, String.valueOf(set));
+    public void saveTeams(Context context, List teams){
+        SharedPreferences settings;
+        SharedPreferences.Editor editor;
+        settings = context.getSharedPreferences(PREFS_NAME,Context.MODE_PRIVATE);
+        editor = settings.edit();
+        Gson gson = new Gson();
+        String jsonFavorites = gson.toJson(teams);
+        editor.putString(TEAMS, jsonFavorites);
         editor.commit();
     }
 
-    public ArrayList<Teams> loadTeams(String key){
-      return null;
+    public ArrayList<Teams> loadTeams(Context context)
+    {
+        SharedPreferences settings;
+        List favorites;
+        settings = context.getSharedPreferences(PREFS_NAME,Context.MODE_PRIVATE);
+        if (settings.contains(TEAMS)) {
+            String jsonFavorites = settings.getString(TEAMS, null);
+            Gson gson = new Gson();
+           Teams favoriteItems = gson.fromJson(jsonFavorites,Teams.class);
+            favorites = Arrays.asList(favoriteItems);
+            favorites = new ArrayList(favorites);
+        } else
+            return null;
+        return (ArrayList) favorites;
     }
 
     private ArrayList<Teams> getDefaultArray() {

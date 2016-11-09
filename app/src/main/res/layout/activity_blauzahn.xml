@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/text_uuid"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="UUID" />
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="MAC Adresse des Bluetooth Devices:" />
+
+    <EditText
+        android:id="@+id/text_adresse"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:text="00:11:12:14:00:35" >
+    </EditText>
+
+    <Button
+        android:id="@+id/bt_verbinden"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="verbinden"
+        android:text="Verbinden" />
+
+    <Button
+        android:id="@+id/bt_trennen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="trennen"
+        android:text="Trennen" />
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Eingabe:" />
+
+    <EditText
+        android:id="@+id/text_eingabe"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:text="Test 123" >
+
+        <requestFocus />
+    </EditText>
+
+    <Button
+        android:id="@+id/bt_senden"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="senden"
+        android:text="Senden" />
+
+    <Button
+        android:id="@+id/bt_empfangen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="empfangen"
+        android:text="Empfangen" />
+
+</LinearLayout>

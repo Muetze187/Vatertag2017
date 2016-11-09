@@ -1,6 +1,5 @@
 package com.helfholz.muetze187.vatertag2017;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,8 +7,6 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
@@ -20,6 +17,7 @@ public class CustomListAdapter extends BaseAdapter {
 
     private ArrayList<Teams> listData;
     private LayoutInflater layoutInflater;
+    private ViewGroup.LayoutParams params;
     ViewHolder holder;
 
     public CustomListAdapter(MainActivity aContext, ArrayList<Teams> listData) {
@@ -48,33 +46,49 @@ public class CustomListAdapter extends BaseAdapter {
         if (convertView == null) {
             convertView = layoutInflater.inflate(R.layout.team_listview, null);
             holder = new ViewHolder();
-            holder.headlineView = (TextView) convertView.findViewById(R.id.name);
-            holder.reporterNameView = (TextView) convertView.findViewById(R.id.drunk);
-            holder.imageView = (ImageView) convertView.findViewById(R.id.alert);
+            holder.teamNameView = (TextView) convertView.findViewById(R.id.name);
+            holder.teamDrunkView = (TextView) convertView.findViewById(R.id.drunk);
+            holder.alertView = (ImageView) convertView.findViewById(R.id.alert);
             holder.progressDrunk = (ProgressBar) convertView.findViewById(R.id.progressDrunk);
             holder.strackLevel = (TextView) convertView.findViewById(R.id.strackStatus);
+            holder.vielfalt = (TextView) convertView.findViewById(R.id.vielfalt);
+            holder.vielfaltOne = (TextView) convertView.findViewById(R.id.textViewOne);
+            holder.vielfaltTwo = (TextView) convertView.findViewById(R.id.textViewTwo);
+            holder.vielfaltThree = (TextView) convertView.findViewById(R.id.textViewThree);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
 
-        holder.headlineView.setText(listData.get(position).getName());
-        holder.reporterNameView.setText(listData.get(position).getDrunk());
-        holder.imageView.setImageResource(listData.get(position).getView());
+        holder.teamNameView.setText(listData.get(position).getName());
+        holder.teamDrunkView.setText(listData.get(position).getDrunk());
+        holder.alertView.setImageResource(listData.get(position).getView());
         holder.strackLevel.setText(listData.get(position).getStrackLevelName());
         holder.progressDrunk.setProgress(listData.get(position).getProgressStrack());
+        holder.vielfalt.setText(listData.get(position).getVielfalt());
+        holder.vielfaltOne.setText(listData.get(position).getCounterOneFormatted());
+        holder.vielfaltTwo.setText(listData.get(position).getCounterTwoFormatted());
+        holder.vielfaltThree.setText(listData.get(position).getCounterThreeFormatted());
         if(listData.get(position).getAlerted())
-            holder.imageView.startAnimation(listData.get(position).animation);
-
+            holder.alertView.startAnimation(listData.get(position).animation);
+       /* params = holder.alertView.getLayoutParams();
+        params.width = 160;
+        params.height = 80;
+        holder.alertView.setLayoutParams(params);*/
         return convertView;
     }
 
     static class ViewHolder {
-        TextView headlineView;
-        TextView reporterNameView;
-        ImageView imageView;
+        TextView teamNameView;
+        TextView teamDrunkView;
+        ImageView alertView;
         ProgressBar progressDrunk;
         TextView strackLevel;
+        TextView vielfalt;
+        TextView vielfaltOne;
+        TextView vielfaltTwo;
+        TextView vielfaltThree;
+
 
     }
 

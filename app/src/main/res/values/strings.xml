@@ -11,4 +11,5 @@
     <string name="playlist">playlist</string>
     <string name="shuffle">shuffle</string>
     <string name="google_api_key">AIzaSyAl_KtOa9JoEEYOUDXrZNvSmZRxsFNKa6w</string>
+    <string name="title_activity_blauzahn">BlauzahnActivity</string>
 </resources>
