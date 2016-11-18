@@ -1,8 +1,11 @@
 package com.helfholz.muetze187.vatertag2017;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.content.Intent;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -17,7 +20,7 @@ import java.util.UUID;
 public class Blauzahn {
 
     private UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    private static final String LOG_TAG = "Vatertag2017";
+    private static final String LOG_TAG = "Blauzahn";
 
     private static Context context;
 
@@ -31,7 +34,17 @@ public class Blauzahn {
     public Blauzahn(Context context) {
         this.context = context;
         adapter = BluetoothAdapter.getDefaultAdapter();
-
+        if (adapter == null || !adapter.isEnabled()) {
+            // Toast.makeText(this, "Bitte Bluetooth aktivieren",
+            //      Toast.LENGTH_LONG).show();
+            Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            ((Activity)context).startActivityForResult(turnOn, 0);
+            // Log.d(LOG_TAG,
+            //       "onCreate: Bluetooth Fehler: Deaktiviert oder nicht vorhanden");
+            //finish();
+            // return;
+        } else
+            Log.d(LOG_TAG, "onCreate: Bluetooth-Adapter ist bereit");
     }
 
 
@@ -50,7 +63,7 @@ public class Blauzahn {
 
     }
 
-    public void verbinden(View v){
+    public static void verbinden(){
 
     }
 }

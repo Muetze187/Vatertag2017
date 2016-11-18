@@ -27,7 +27,7 @@ public class Teams{
     String formattedOne, formattedTwo, formattedThree;
     private int view;
     private boolean isAlerted;
-    Animation animation;
+    transient Animation animation;
     int progressStrack;
 
 

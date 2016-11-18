@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Environment;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,6 +20,7 @@ import android.widget.TextView;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,12 +29,13 @@ public class Mp3Activity extends Activity {
 
     private float x1,x2;
     static final int MIN_DISTANCE = 150;
-    private List<String> item = null;
-    private List<String> path = null;
+    private ArrayList<String> item = null;
+    private ArrayList<String> path = null;
     private String root = Environment.getExternalStorageDirectory().toString()+"/Music/" ;
     private TextView myPath;
     int songIndex = 0;
     ListView listViewPlaylist;
+    ArrayAdapter<String> fileList;
     ArrayAdapter<String> mAdapter;
     MainActivity mainActivity = new MainActivity();
    String fileName = "";
@@ -56,6 +59,7 @@ public class Mp3Activity extends Activity {
                     Intent in = new Intent(getApplicationContext(), MainActivity.class);
                     //in.putExtra("songIndex", songIndex);
                     in.putExtra("filename", fileName);
+                    //in.putStringArrayListExtra("musicList", item );
                     setResult(200, in);
                     finish();
                     //startActivity(i);
@@ -174,7 +178,7 @@ public class Mp3Activity extends Activity {
             else
                 item.add(file.getName());
         }
-        ArrayAdapter<String> fileList = new ArrayAdapter<String>(this, R.layout.spinner_item, item);
+        fileList = new ArrayAdapter<String>(this, R.layout.spinner_item, item);
         listViewPlaylist.setAdapter(fileList);
 
     }

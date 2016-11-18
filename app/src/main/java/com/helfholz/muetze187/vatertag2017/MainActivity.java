@@ -13,6 +13,8 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
+import android.location.Location;
+import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -30,27 +32,39 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.nearby.messages.Distance;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -67,7 +81,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
 
-public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener, MediaPlayer.OnCompletionListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener, MediaPlayer.OnCompletionListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     //Gui Elements
     TextView textViewDateTime;
@@ -76,6 +90,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     ListView listViewTeams;
     TextView textViewAmountDrink;
     TextView textViewGlueckwunsch;
+    TextView distanceMarkers;
     final String DRINKAMOUNT = "Zu trinkende Menge: ";
     final String GLUECKWUNSCH = "Glückwunsch! Dies wird euer ";
     int currentSong;
@@ -88,7 +103,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     ImageButton play, prev, forw, shuffle;
     static SeekBar seekBarMusic;
-    ArrayList image_details;
     final int delay = 1000;
     int delay2 = 2000;
     Handler hTimeDate;
@@ -96,6 +110,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     Handler hBlinzeln;
     Handler hAlert;
     static boolean isStarted;
+    static boolean fromIntent;
     boolean isShuffle;
     Date date;
     SimpleDateFormat dateFormat;
@@ -115,7 +130,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     int winnerDrink;
     SharedPreferences prefs;
     Gson gson;
-    String jsonTeams;
+    String jsonTeams = "";
     boolean hadChanceDrink1 = false, isHadChanceDrink2 = false, isHadChanceDrink3 = false;
     Spinner spinner;
     Dialog dialogChangeName;
@@ -130,9 +145,15 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     static final int MIN_DISTANCE = 150;
     public static AudioManager audioManager;
     private GoogleApiClient mGoogleApiClient;
-
-    TeamSaver teamSaver;
-
+    private LocationManager locationManager;
+    Marker markerGoal, markerStart;
+    Location mLastLocation;
+    LocationRequest locationRequest;
+    private GoogleMap mMap;
+    boolean mapCentered = false;
+    private Switch switchMap;
+    private Thread.UncaughtExceptionHandler defaultUEH;
+    private Animation animShake;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -141,15 +162,22 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         if (resultCode == 200) {
 
             name = data.getExtras().getString("filename");
-
-
             play.setBackgroundResource(R.drawable.ic_pause);
             if (!name.isEmpty()) {
                 int spinnerPos = adapterSpinner.getPosition("/TD/" + name);
-                spinner.setSelection(spinnerPos);
-                isStarted = true;
-            }
+                for(int i =0 ; i < music.size(); i++)
+                {
+                    String tmp = music.get(i).toString();
+                    Log.e("music coming from intent", tmp.toString() + " musicString: " + music.get(i).toString());
+                    if(tmp.contains(name)){
+                        spinner.setSelection(i);
+                        currentSong = i;
+                    }
+                }
 
+                isStarted = true;
+                fromIntent = true;
+            }
 
         }
         Log.d("name ist", name);
@@ -195,24 +223,18 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         //Location
-        /*if (mGoogleApiClient == null) {
-            mGoogleApiClient = new GoogleApiClient.Builder(this)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(LocationServices.API)
-                    .build();
-        }*/
 
         //init GUI
         textViewDateTime = (TextView) findViewById(R.id.textViewDateTime);
         textFett = (TextView) findViewById(R.id.textViewFett);
+        distanceMarkers = (TextView) findViewById(R.id.textViewDistance);
         textFett.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, BlauzahnActivity.class);
-                startActivity(intent);
-                if(counter == 3){
 
+                if(counter == 3){
+                    Intent intent = new Intent(MainActivity.this, BlauzahnActivity.class);
+                    startActivity(intent);
                     counter = 0;
                 }else{
                     counter++;
@@ -228,17 +250,18 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         shuffle = (ImageButton) findViewById(R.id.shuffle);
         listViewTeams = (ListView) findViewById(R.id.listViewTeams);
         isStarted = false;
+        fromIntent = false;
         isShuffle = false;
-        image_details = getListData();
-
+        getListData();
+        animShake = AnimationUtils.loadAnimation(MainActivity.this, R.anim.shake);
 
         getMusic();
         for (String a : music) {
             musicTrimmed.add(a.substring(25));
         }
 
-       // buttonLoad = (Button) findViewById(R.id.buttonLaden);
-        //buttonSave = (Button) findViewById(R.id.buttonSpeichern);
+
+
         //TESTS
         spinner = (Spinner) findViewById(R.id.spinner);
         adapterSpinner = new ArrayAdapter<String>(this,
@@ -273,7 +296,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         dialogDrinkAccepted = new Dialog(MainActivity.this);
         dialogDrinkAccepted.setContentView(R.layout.drink_acception);
         dialogDrinkAccepted.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        teamSaver = new TeamSaver();
+
 
         //music seekbar
         seekBarMusic = (SeekBar) findViewById(R.id.seekBarMusic);
@@ -293,8 +316,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         audioManager = (AudioManager) getSystemService(this.AUDIO_SERVICE);
 
 
+        defaultUEH = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler(_unCaughtExceptionHandler);
 
-        adapterTeamList = new CustomListAdapter(this, image_details);
+
+        adapterTeamList = new CustomListAdapter(this, teamList);
         //mAdapter= new ArrayAdapter<String>(this,
         //        android.R.layout.simple_list_item_1, musicTrimmed);
 
@@ -311,49 +337,124 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
         mp = MediaPlayer.create(this, R.raw.schweinquieken);
         buttonRandomDrink = (Button) dialogChooseDrink.findViewById(R.id.buttonRandom);
-        //TESTS
-     /*   buttonLoad.setOnClickListener(new View.OnClickListener() {
+
+        locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, new android.location.LocationListener() {
             @Override
-            public void onClick(View view) {
-               // teamList = teamSaver.loadTeams(getApplicationContext());
-                //adapterTeamList.notifyDataSetChanged();
-             *//*   prefs = getApplicationContext().getSharedPreferences("Teams", getApplicationContext().MODE_PRIVATE);
-                gson = new Gson();
-                jsonTeams = prefs.getString("myJson", "");
-                if(jsonTeams.isEmpty()){
-                    teamList = new ArrayList<Teams>();
-                }else {
-                    Type type = new TypeToken<List<Teams>>() {
-                    }.getType();
-                    teamList = gson.fromJson(jsonTeams, type);*//*
-                //}
+            public void onLocationChanged(Location location) {
+
+                if(mapCentered){
+                    mLastLocation = location;
+                    Log.d("onLocationChangedOwweProvider", location.getLatitude() + "" +location.getLongitude());
+                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+
+                    Location start = new Location("");
+                    start.setLatitude(latLng.latitude);
+                    start.setLongitude(latLng.longitude);
+                    Location finish = new Location("");
+                    LatLng latLngFinish = markerGoal.getPosition();
+                    finish.setLatitude(latLngFinish.latitude);
+                    finish.setLongitude(latLngFinish.longitude);
+                    float distance = (int)start.distanceTo(finish);
+                    distanceMarkers.setText(distanceMarkers.getText().toString() + distance);
+                }
+
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
+
+            }
+        });
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, new android.location.LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+
+                if(mapCentered){
+                    mLastLocation = location;
+                    Log.d("onLocationChangedOwweGPS", location.getLatitude() + "" +location.getLongitude());
+                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+
+                    Location start = new Location("");
+                    start.setLatitude(latLng.latitude);
+                    start.setLongitude(latLng.longitude);
+                    Location finish = new Location("");
+                    LatLng latLngFinish = markerGoal.getPosition();
+                    finish.setLatitude(latLngFinish.latitude);
+                    finish.setLongitude(latLngFinish.longitude);
+                    float distance = (int)start.distanceTo(finish);
+                    distanceMarkers.setText("Noch zu Wandern: " + distance);
+
+                }
+
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
 
             }
         });
 
-        buttonSave.setOnClickListener(new View.OnClickListener() {
+        switchMap = (Switch) findViewById(R.id.switchMap);
+        switchMap.setChecked(false);
+        switchMap.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View view) {
-                //teamSaver.saveTeams(getApplicationContext(),teamList);
-
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(b){
+                    mapCentered = true;
+                    LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+                }else{
+                    mapCentered = false;
+                }
             }
-
-        });*/
+        });
+        //TESTS
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                Log.d("IM HERE! FOR NO REASON", "");
+                Log.e("IM HERE! FOR NO REASON", "");
                 try {
-                    if (!isStarted) {
+                    if(fromIntent){
+                        fromIntent = false;
+                    }
+                    else if(!isStarted)
+                    {
                         currentSong = i;
-                    } else {
+                    }
+                    else{
                         playSong(music.get(i));
-                        // isStarted = true;
+                        isStarted = true;
                         play.setBackgroundResource(R.drawable.ic_pause);
                         currentSong = i;
-
+                        fromIntent = false;
                     }
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -380,10 +481,12 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         mediaPlayerMusic.start();
                         play.setBackgroundResource(R.drawable.ic_pause);
                     }
+                    fromIntent = false;
                 } else {
                     try {
                         playSong(music.get(currentSong));
                         isStarted = true;
+                        fromIntent = false;
                         spinner.setSelection(currentSong);
                         play.setBackgroundResource(R.drawable.ic_pause);
                     } catch (IOException e) {
@@ -420,6 +523,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     }
                     play.setBackgroundResource(R.drawable.ic_pause);
                 }
+                fromIntent = false;
 
             }
 
@@ -451,7 +555,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     }
                     play.setBackgroundResource(R.drawable.ic_pause);
                 }
-
+                fromIntent = false;
 
             }
         });
@@ -510,6 +614,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 textViewAmountDrink = (TextView) dialogChooseDrink.findViewById(R.id.textViewMengeDrink);
                 textViewGlueckwunsch = (TextView) dialogChooseDrink.findViewById(R.id.textViewGlueckwunsch);
 
+
                 buttonRandomDrink.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -530,23 +635,40 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                             imageViewDrink2.setColorFilter(Color.RED);
                         if(drink == 2)
                             imageViewDrink3.setColorFilter(Color.RED);
+                        if(hasChoosen == 1){
+                            buttonRandomDrink.setText("Alternative");
+                        }
                         if(hasChoosen < 2){
                             getRandomDrink();
+                            buttonRandomDrink.setAnimation(animShake);
                         }
                         else
                         {
+
                             if((tmp == 0 && drink == 1) || (tmp  == 1 && drink == 0)){
                                 imageViewDrink1.setColorFilter(Color.RED);
                                 imageViewDrink2.setColorFilter(Color.RED);
                                 imageViewDrink3.setColorFilter(Color.GREEN);
+                                imageViewDrink3.startAnimation(animShake);
+                                imageViewDrink1.clearAnimation();
+                                imageViewDrink2.clearAnimation();
+                                winnerDrink = 3;
                             }else if((tmp  == 0 && drink == 2 ) || (drink == 0 && tmp == 2)){
                                 imageViewDrink1.setColorFilter(Color.RED);
                                 imageViewDrink2.setColorFilter(Color.GREEN);
                                 imageViewDrink3.setColorFilter(Color.RED);
+                                imageViewDrink2.startAnimation(animShake);
+                                imageViewDrink1.clearAnimation();
+                                imageViewDrink3.clearAnimation();
+                                winnerDrink = 2;
                             }else{
                                 imageViewDrink1.setColorFilter(Color.GREEN);
                                 imageViewDrink2.setColorFilter(Color.RED);
                                 imageViewDrink3.setColorFilter(Color.RED);
+                                imageViewDrink1.startAnimation(animShake);
+                                imageViewDrink2.clearAnimation();
+                                imageViewDrink3.clearAnimation();
+                                winnerDrink = 1;
                             }
 
                             finishDialogChooseDrink(position);
@@ -734,10 +856,61 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             }
         });
 
+        buttonLoad = (Button) findViewById(R.id.buttonLaden);
+
+
+        buttonSave = (Button) findViewById(R.id.buttonSpeichern);
+
+        buttonSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                saveTeams();
+            }
+        });
+
+        buttonLoad.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                loadTeams();
+            }
+
+        });
+
         setupDateFormat();
         showTimeAndDate();
         alarmTeam();
+        loadTeams();
 
+    }
+
+    private void saveTeams(){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+        SharedPreferences.Editor editor = prefs.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(teamList);
+        editor.putString("Teams", json);
+        editor.commit();
+        Toast.makeText(this, "Teams erfolgreich gespeichert", Toast.LENGTH_SHORT).show ();
+        for(int i = 0; i < teamList.size(); i++)
+            Log.d("saved ", "teams " + teamList.get(i).getName() +"JSON: " + json);
+    }
+
+    private void loadTeams(){
+        ArrayList<Teams> tmp = new ArrayList<Teams>();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+        Gson gson = new Gson();
+        String json = prefs.getString("Teams",null);
+        if(json != null){
+            Type type = new TypeToken<ArrayList<Teams>>(){}.getType();
+            teamList = gson.fromJson(json, type);
+        }
+        Toast.makeText(this, "Teams erfolgreich geladen", Toast.LENGTH_SHORT).show ();
+        Log.d("teamListLoad", "TeamList " +teamList.size()+ " JSON " + json);
+        //teamList = tmp;
+        adapterTeamList = new CustomListAdapter(MainActivity.this, teamList);
+
+        listViewTeams.setAdapter(adapterTeamList);
+        adapterTeamList.notifyDataSetChanged();
     }
 
     private void resetDrinkDialog(){
@@ -762,7 +935,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         imageViewDrink1.setEnabled(false);
         imageViewDrink2.setEnabled(false);
         imageViewDrink3.setEnabled(false);
-
+        imageViewDrink1.clearAnimation();
+        imageViewDrink2.clearAnimation();
+        imageViewDrink3.clearAnimation();
         teamList.get(pos).increaseStrackLevel(10);
         teamList.get(pos).setDrunk(teamList.get(pos).getDrunkPlain());
 
@@ -813,16 +988,26 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     imageViewDrink1.setImageResource(R.drawable.number1_pink);
                     imageViewDrink2.setImageResource(R.drawable.number2);
                     imageViewDrink3.setImageResource(R.drawable.number3);
+                    imageViewDrink1.startAnimation(animShake);
+                    imageViewDrink2.clearAnimation();
+                    imageViewDrink3.clearAnimation();
                     break;
                 case 1:
                     imageViewDrink2.setImageResource(R.drawable.number2_pink);
                     imageViewDrink1.setImageResource(R.drawable.number1);
                     imageViewDrink3.setImageResource(R.drawable.number3);
+                    imageViewDrink2.startAnimation(animShake);
+                    imageViewDrink1.clearAnimation();
+                    imageViewDrink3.clearAnimation();
                     break;
                 case 2:
                     imageViewDrink3.setImageResource(R.drawable.number3_pink);
                     imageViewDrink1.setImageResource(R.drawable.number1);
                     imageViewDrink2.setImageResource(R.drawable.number2);
+                    imageViewDrink3.startAnimation(animShake);
+                    imageViewDrink1.clearAnimation();
+                    imageViewDrink2.clearAnimation();
+                    break;
             }
         }
 
@@ -911,7 +1096,14 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         }
     }
 
-
+    private Thread.UncaughtExceptionHandler _unCaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
+        @Override
+        public void uncaughtException(Thread thread, Throwable ex) {
+            saveTeams();
+            Log.d("saveTEamsOnPause()", "saved");
+            ex.printStackTrace();
+        }
+    };
     public void playSong(String path) throws IllegalArgumentException,
             IllegalStateException, IOException {
         // String extStorageDirectory = Environment.getExternalStorageDirectory()
@@ -919,14 +1111,16 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
         // path = extStorageDirectory + File.separator + path;
         //path = extStorageDirectory + path;
-        Log.d("path:", path);
-        mediaPlayerMusic.reset();
-        mediaPlayerMusic.setDataSource(path);
-        mediaPlayerMusic.prepare();
-        seekBarMusic.setProgress(0);
-        seekBarMusic.setMax(100);
-        mUpdateTimeTask.run();
-        mediaPlayerMusic.start();
+            Log.d("path:", path);
+            mediaPlayerMusic.reset();
+            mediaPlayerMusic.setDataSource(path);
+            mediaPlayerMusic.prepare();
+            seekBarMusic.setProgress(0);
+            seekBarMusic.setMax(100);
+            mUpdateTimeTask.run();
+            mediaPlayerMusic.start();
+
+
     }
 
 
@@ -977,7 +1171,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         adapterTeamList.notifyDataSetChanged();
     }
 
-    private ArrayList getListData() {
+    private void getListData() {
 
         Teams team1 = new Teams();
         team1.setName("Error 404");
@@ -1009,7 +1203,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         team6.setDrunk(11);
         teamList.add(team6);
 
-        /*Teams team7 = new Teams();
+        Teams team7 = new Teams();
         team7.setName("Trump Voters");
         team7.setDrunk(88);
         teamList.add(team7);
@@ -1027,9 +1221,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         Teams team10 = new Teams();
         team10.setName("BWLer");
         team10.setDrunk(0);
-        teamList.add(team10);*/
-        // Add some more dummy data for testing
-        return teamList;
+        teamList.add(team10);
+
     }
 
 
@@ -1076,15 +1269,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         hMusic.postDelayed(mUpdateTimeTask, 100);
     }
 
-    private void goToUrl(String url) {
-        Uri uriUrl = Uri.parse(url);
-        Intent launchBrowser = new Intent(Intent.ACTION_VIEW, uriUrl);
-        startActivity(launchBrowser);
-    }
 
     public void getMusic() { //String[]
         //FOR ACTUAL DEVICE
-       /* String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension("mp3");
+    /*    String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension("mp3");
         String selectionMimeType = MediaStore.Files.FileColumns.MIME_TYPE + "=?";
         String[] selectionArgsMp3 = new String[]{ mimeType};
         final Cursor mCursor = getContentResolver().query(
@@ -1113,12 +1301,13 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
             }
         }
-
+        for(int i = 0; i < music.size(); i++)
+        Log.e("GetMsic() ", "Titel " + music.get(i));
         cur.close();
 
 
 
-       /* int count = mCursor.getCount();
+     /*   int count = mCursor.getCount();
 
         String[] songs = new String[count];
         int i = 0;
@@ -1129,14 +1318,15 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             } while (mCursor.moveToNext());
         }
 
-        mCursor.close();
-*/
+        mCursor.close();*/
+
         // return songs;
     }
 
     @Override
     public void onMapReady(GoogleMap map) {
-        map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        mMap = map;
+        mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -1147,33 +1337,122 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        map.setMyLocationEnabled(true);
 
-            map.addMarker(new MarkerOptions()
+        buildGoogleAPI();
+        mMap.setMyLocationEnabled(true);
+
+        markerGoal = mMap.addMarker(new MarkerOptions()
             .position(new LatLng(49.227743, 7.480724))
                     .title("Scheierfeschd")
-                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)));
-            UiSettings settings =  map.getUiSettings();
-            settings.setZoomControlsEnabled(true);
-            settings.setIndoorLevelPickerEnabled(false);
-            settings.setMapToolbarEnabled(false);
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+            markerStart = mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(49.262674, 7.570136))
+                    .title("Start Vatertag 2017")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(new LatLng(49.262674, 7.570136), 10);
+        mMap.animateCamera(cameraUpdate);
+
+        UiSettings settings =  mMap.getUiSettings();
+        settings.setZoomControlsEnabled(true);
+        settings.setIndoorLevelPickerEnabled(false);
+        settings.setMapToolbarEnabled(false);
+
 
     }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
+        locationRequest = new LocationRequest();
+        locationRequest.setInterval(1000);
+        locationRequest.setFastestInterval(1000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, this );
+        }
 
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-
+       /* mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        if (mLastLocation != null) {
+           // mLatitudeText.setText(String.valueOf(mLastLocation.getLatitude()));
+            //mLongitudeText.setText(String.valueOf(mLastLocation.getLongitude()));
+            LatLng tmp = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+            markerStart.setPosition(tmp);
+        }*/
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
+
+
+    @Override
+    public void onLocationChanged(Location location) {
+        mLastLocation = location;
+
+        Log.d("onLocationChangedUnne", location.getLatitude() + "" +location.getLongitude());
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+
+        Location start = new Location("");
+        start.setLatitude(latLng.latitude);
+        start.setLongitude(latLng.longitude);
+        Location finish = new Location("");
+        LatLng latLngFinish = markerGoal.getPosition();
+        finish.setLatitude(latLngFinish.latitude);
+        finish.setLongitude(latLngFinish.longitude);
+        float distance = (int)start.distanceTo(finish);
+        distanceMarkers.setText("Noch zu Wandern: " + distance);
+        if(mGoogleApiClient != null)
+             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+
+    }
+
+    private synchronized void buildGoogleAPI(){
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.connect();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+       // saveTeams();
+        //Log.d("saveTEamsOnPause()", "saved");
+
+        if(mGoogleApiClient != null && mGoogleApiClient.isConnected())
+        mGoogleApiClient.disconnect();
+
+    }
+
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(mGoogleApiClient != null)
+        mGoogleApiClient.connect();
+    }
+
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+
+    }
+
+
 }
 
 class Mp3Filter implements FilenameFilter{

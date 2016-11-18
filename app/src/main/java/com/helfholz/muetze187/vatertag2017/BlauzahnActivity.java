@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -22,7 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
-public class BlauzahnActivity extends AppCompatActivity {
+public class BlauzahnActivity extends MainActivity {
 
     // UUID fuer Kommunikation mit Seriellen Modulen
     private UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -45,7 +46,7 @@ public class BlauzahnActivity extends AppCompatActivity {
 
         // Textfeld setzen
         ((TextView) findViewById(R.id.text_uuid)).setText("UUID: " + uuid);
-
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         // Verbindung mit Bluetooth-Adapter herstellen
         adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null || !adapter.isEnabled()) {
@@ -55,8 +56,8 @@ public class BlauzahnActivity extends AppCompatActivity {
             startActivityForResult(turnOn, 0);
            // Log.d(LOG_TAG,
              //       "onCreate: Bluetooth Fehler: Deaktiviert oder nicht vorhanden");
-            finish();
-            return;
+            //finish();
+           // return;
         } else
             Log.d(LOG_TAG, "onCreate: Bluetooth-Adapter ist bereit");
     }
