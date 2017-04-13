@@ -1,37 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="600dp"
+    android:layout_height="320dp"
+    android:layout_centerHorizontal="true"
+    android:background="@drawable/dialog_border"
+    >
 
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Wirklich löschen?"
+        android:text="Willst du das Team wirklich löschen?"
         android:id="@+id/textView4"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:textColor="#ffaaab"
-        android:textSize="28dp" />
+        android:textSize="40sp" />
 
     <Button
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="96dp"
-        android:layout_height="wrap_content"
-        android:text="Jup"
+        android:layout_width="200dp"
+        android:layout_height="100dp"
+        android:text="Ja"
+        android:textSize="32sp"
+        android:textColor="#ffaaab"
         android:id="@+id/buttonDeleteOk"
         android:layout_below="@+id/textView4"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+         />
 
     <Button
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="96dp"
-        android:layout_height="wrap_content"
-        android:text="Nä ne"
+        android:layout_width="200dp"
+        android:layout_height="100dp"
+        android:text="Nein"
+        android:textSize="32sp"
+        android:textColor="#ffaaab"
         android:id="@+id/buttonDeleteCancel"
-        android:layout_alignTop="@+id/buttonDeleteOk"
+        android:layout_below="@+id/textView4"
         android:layout_alignRight="@+id/textView4"
-        android:layout_alignEnd="@+id/textView4" />
+        />
 </RelativeLayout>

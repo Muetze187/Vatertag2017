@@ -1,114 +1,143 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="5dip" >
 
     <TextView
         android:id="@+id/name"
+        android:text="raddegiggel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textStyle="bold"
-        android:textColor="#ff8800"
-        android:textSize="22sp"
-        android:typeface="sans" />
+        android:textColor="@color/colorText"
+        android:textSize="28sp" />
 
-    <TextView
+   <TextView
         android:id="@+id/drunk"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/name"
+       android:text="Getrunken:"
         android:layout_marginTop="5dip"
-        android:textColor="#ff8800"
-        android:textSize="16sp" />
+        android:textColor="@color/colorText"
+        android:textSize="20sp" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/strackStatus"
-        android:textColor="#ff8800"
-        android:textSize="16sp"
-        android:layout_alignParentBottom="true"
-        android:layout_below="@+id/drunk"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/vielfalt"
-        android:textColor="#ff8800"
-        android:textSize="16sp"
-        android:layout_marginLeft="220dp"
-        android:layout_marginTop="5dp"/>
-
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/one"
-        android:layout_marginStart="218dp"
-        android:layout_marginTop="28dp"
-        android:src="@drawable/number1_pink" />
-
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/two"
-        android:layout_marginStart="248dp"
-        android:layout_marginTop="28dp"
-        android:src="@drawable/number2_pink" />
-
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/three"
-        android:layout_marginStart="278dp"
-        android:layout_marginTop="28dp"
-        android:src="@drawable/number3_pink" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/textViewOne"
-        android:layout_marginStart="224dp"
-        android:textSize="16sp"
-        android:textColor="@color/colorPink"
-        android:layout_marginTop="58dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/textViewTwo"
-        android:layout_marginStart="254dp"
-        android:textSize="16sp"
-        android:textColor="@color/colorPink"
-        android:layout_marginTop="58dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/textViewThree"
-        android:layout_marginStart="284dp"
-        android:textSize="16sp"
-        android:textColor="@color/colorPink"
-        android:layout_marginTop="58dp" />
-
-    <ImageView
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginLeft="320dp"
-        android:layout_marginTop="12dp"
-        android:id="@+id/alert" />
+     <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:id="@+id/strackStatus"
+          android:textColor="@color/colorText"
+         android:text="Müdigkeit:"
+          android:textSize="20sp"
+          android:layout_below="@+id/drunk"/>
 
     <ProgressBar
-        android:layout_width="120dp"
+        android:layout_width="80dp"
         android:layout_height="wrap_content"
         android:id="@+id/progressDrunk"
         style="?android:attr/progressBarStyleHorizontal"
         android:max="100"
         android:progressTint="@color/colorPink"
         android:layout_below="@+id/drunk"
-        android:layout_marginTop="5dp"
-        android:layout_marginStart="5dp"
-        android:layout_toEndOf="@+id/strackStatus" />
+        android:layout_marginTop="12dp"
+        android:layout_toRightOf="@+id/strackStatus" />
+
+  <!--  <View
+        android:layout_width="4px"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/progressDrunk"
+        android:id="@+id/dividerListVertical"
+        android:layout_marginStart="20dp"
+        android:background="@android:color/holo_orange_light"
+        android:layout_toRightOf="@+id/progressDrunk"
+        android:layout_alignBottom="@+id/progressDrunk"
+
+        />-->
+
+    <View style="@style/Divider"
+        android:id="@+id/dividerListVertical"
+        android:layout_toEndOf="@+id/progressDrunk"
+        android:layout_marginStart="20dp"
+        android:layout_toRightOf="@+id/progressDrunk"
+        android:layout_alignBottom="@+id/progressDrunk"
+        android:background="@color/colorText"
+
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/vielfalt"
+        android:textColor="@color/colorText"
+        android:textSize="20sp"
+        android:layout_marginLeft="10dp"
+        android:layout_toEndOf="@+id/dividerListVertical" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/one"
+        android:layout_below="@+id/vielfalt"
+        android:layout_alignLeft="@+id/vielfalt"
+        android:src="@drawable/number1_pink" />
+
+   <ImageView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/two"
+       android:layout_toEndOf="@+id/one"
+       android:layout_below="@+id/vielfalt"
+       android:src="@drawable/number2_pink" />
+
+      <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/three"
+          android:layout_below="@+id/vielfalt"
+          android:layout_toEndOf="@+id/two"
+        android:src="@drawable/number3_pink" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewOne"
+        android:textSize="20sp"
+        android:textColor="@color/colorText"
+        android:layout_marginStart="7dp"
+        android:layout_below="@+id/one"
+        android:layout_alignLeft="@+id/one"/>
+
+     <TextView
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:id="@+id/textViewTwo"
+         android:textSize="20sp"
+         android:layout_marginStart="7dp"
+         android:textColor="@color/colorText"
+         android:layout_below="@+id/two"
+         android:layout_alignLeft="@+id/two"/>
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:id="@+id/textViewThree"
+          android:textSize="20sp"
+          android:layout_marginStart="7dp"
+          android:textColor="@color/colorText"
+         android:layout_below="@+id/three"
+          android:layout_alignLeft="@+id/three"/>
+
+      <ImageView
+           android:layout_width="80dp"
+           android:layout_height="80dp"
+          android:layout_marginStart="40dp"
+          android:layout_marginBottom="20dp"
+           android:layout_toEndOf="@+id/vielfalt"
+          android:layout_below="@+id/vielfalt"
+           android:id="@+id/alert" />
+
+
 
 </RelativeLayout>

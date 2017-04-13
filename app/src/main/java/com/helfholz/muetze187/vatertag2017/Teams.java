@@ -20,6 +20,8 @@ import java.util.Comparator;
 public class Teams{
 
     private String name;
+    private String memberOne;
+    private String memberTwo;
 
     private String strackLevel;
     private String vielfalt;
@@ -37,7 +39,8 @@ public class Teams{
         animation.setInterpolator(new LinearInterpolator());
         animation.setRepeatCount(Animation.INFINITE);
         animation.setRepeatMode(Animation.REVERSE);
-        strackLevel = "Stracklevel: ";
+
+        strackLevel = "Müdigkeit: ";
         vielfalt = "Verteilung: ";
         isAlerted = false;
         progressStrack = 0;
@@ -89,6 +92,22 @@ public class Teams{
 
     public String getName(){
         return name;
+    }
+
+    public String getMemberOne(){
+        return memberOne;
+    }
+
+    public String getMemberTwo(){
+        return memberTwo;
+    }
+
+    public void setMemberOne(String name){
+        memberOne = name;
+    }
+
+    public void setMemberTwo(String name){
+        memberTwo = name;
     }
 
     public void setName(String name){

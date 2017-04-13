@@ -1,69 +1,220 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical" >
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/text_uuid"
-        android:layout_width="fill_parent"
+        android:text="Wartungsbereich:"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="UUID" />
+        android:id="@+id/textViewWartungHeadline"
+        android:textSize="24sp"
+        android:textStyle="bold"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonFeedBackDrillo"
+        android:layout_toRightOf="@+id/textViewWartungHeadline"
+        android:layout_alignBottom="@+id/textViewWartungHeadline"
+        android:layout_margin="4dp"
+        android:layout_alignLeft="@+id/buttonWartungDrink1"
+        android:clickable="false"
+        android:text="Arduino"
+        android:textSize="10sp"
+        android:background="@color/colorRed"
+        />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonFeedBackAntrieb"
+        android:layout_toRightOf="@+id/buttonFeedBackBT"
+        android:layout_alignBottom="@+id/textViewWartungHeadline"
+        android:layout_alignLeft="@+id/buttonWartungDrink2"
+        android:layout_margin="4dp"
+        android:clickable="false"
+        android:text="Antrieb"
+        android:textSize="10sp"
+        android:background="@color/colorRed"
+        />
+
+
 
     <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="MAC Adresse des Bluetooth Devices:" />
-
-    <EditText
-        android:id="@+id/text_adresse"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:text="00:11:12:14:00:35" >
-    </EditText>
-
-    <Button
-        android:id="@+id/bt_verbinden"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="verbinden"
-        android:text="Verbinden" />
+        android:text="Bluetooth:"
+        android:textSize="@dimen/textSizes"
+        android:id="@+id/textViewWartungBT"
+        android:layout_below="@+id/textViewWartungHeadline"/>
 
     <Button
-        android:id="@+id/bt_trennen"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="trennen"
-        android:text="Trennen" />
+        android:text="on"
+        android:textSize="@dimen/textSizes"
+        android:layout_below="@+id/textViewWartungBT"
+        android:id="@+id/buttonWartungBTon" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonWartungBToff"
+        android:text="off"
+        android:textSize="@dimen/textSizes"
+        android:layout_below="@id/textViewWartungBT"
+        android:layout_toEndOf="@+id/buttonWartungBTon" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="trennen"
+        android:textSize="@dimen/textSizes"
+        android:id="@+id/buttonWartungBTtrennen"
+        android:layout_below="@id/buttonWartungBTon"
+        android:layout_alignEnd="@+id/buttonWartungBToff"
+        android:layout_alignParentStart="true"
+        />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonWartungBTShowList"
+        android:textSize="@dimen/textSizes"
+        android:layout_below="@+id/buttonWartungBTtrennen"
+        android:layout_alignEnd="@+id/buttonWartungBTtrennen"
+        android:layout_alignParentStart="true"
+        android:text="Liste"/>
 
     <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="Eingabe:" />
-
-    <EditText
-        android:id="@+id/text_eingabe"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:text="Test 123" >
-
-        <requestFocus />
-    </EditText>
-
-    <Button
-        android:id="@+id/bt_senden"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="senden"
-        android:text="Senden" />
+        android:id="@+id/textViewWartungBTinfo"
+        android:layout_below="@+id/buttonWartungBTShowList"
+        android:textSize="@dimen/textSizes"/>
 
-    <Button
-        android:id="@+id/bt_empfangen"
+
+    <View
+        android:layout_width="wrap_content"
+        android:id="@+id/dividerHorizontalHeadline"
+        android:layout_height="1dp"
+        android:background="@android:color/holo_blue_dark"
+        android:layout_below="@+id/textViewWartungHeadline"/>
+
+    <View
+        android:layout_width="wrap_content"
+        android:id="@+id/dividerHorizontal"
+        android:layout_height="1dp"
+        android:background="@android:color/holo_blue_dark"
+        android:layout_below="@+id/buttonWartungLaden"
+        android:layout_alignLeft="@+id/dividerVertical"/>
+
+    <ListView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="empfangen"
-        android:text="Empfangen" />
+        android:id="@+id/listViewBondedDevices"
+        android:layout_toRightOf="@+id/dividerVertical"
+        android:layout_below="@+id/dividerHorizontal"/>
 
-</LinearLayout>
+    <View
+        android:layout_width="1dp"
+        android:id="@+id/dividerVertical"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="14dp"
+        android:background="@android:color/holo_blue_dark"
+        android:layout_alignTop="@+id/dividerHorizontalHeadline"
+        android:layout_toEndOf="@+id/textViewWartungHeadline" />
+    <Button
+        android:text="Drink 1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textViewWartungManuell"
+        android:layout_below="@+id/textViewWartungManuell"
+        android:id="@+id/buttonWartungDrink1"
+        android:textSize="@dimen/textSizes"
+
+        />
+   <Button
+        android:text="Drink 2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/buttonWartungDrink1"
+        android:layout_below="@+id/textViewWartungManuell"
+         android:id="@+id/buttonWartungDrink2"
+        android:textSize="@dimen/textSizes" />
+     <Button
+         android:text="Drink 3"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:layout_below="@+id/textViewWartungManuell"
+         android:layout_toEndOf="@+id/buttonWartungDrink2"
+         android:id="@+id/buttonWartungDrink3"
+         android:textSize="@dimen/textSizes" />
+    <View
+        android:layout_width="wrap_content"
+        android:id="@+id/dividerHorizontal1"
+        android:layout_height="1dp"
+        android:background="@android:color/holo_blue_dark"
+        android:layout_below="@+id/buttonWartungDrink1"
+        android:layout_alignLeft="@+id/dividerVertical"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Teameinstellungen:"
+        android:id="@+id/textViewWartungTeams"
+        android:textSize="@dimen/textSizes"
+        android:layout_below="@+id/buttonWartungDrink1"
+        android:layout_alignLeft="@+id/buttonWartungDrink1"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewWartungTeams"
+        android:layout_alignLeft="@+id/buttonWartungDrink1"
+        android:id="@+id/buttonWartungSpeichern"
+        android:text="Save"
+        android:layout_alignRight="@+id/buttonWartungDrink1"
+        android:textSize="20sp"
+        />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewWartungTeams"
+        android:layout_alignLeft="@+id/buttonWartungDrink2"
+        android:id="@+id/buttonWartungLaden"
+        android:text="Load"
+        android:layout_alignRight="@+id/buttonWartungDrink2"
+        android:textSize="20sp"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Teameinstellungen:"
+        android:id="@+id/textViewWartungAlarm"
+        android:textSize="@dimen/textSizes"
+        android:layout_below="@+id/buttonWartungDrink1"
+        android:layout_alignLeft="@+id/buttonWartungDrink1"/>
+
+    <Switch
+        android:text="Alarm off/on"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewWartungTeams"
+        android:layout_alignLeft="@+id/buttonWartungDrink3"
+        android:layout_alignRight="@+id/buttonWartungDrink3"
+        android:layout_alignBottom="@+id/dividerHorizontal"
+        android:id="@+id/switchWartungToggleAlarm"
+        android:layout_marginLeft="4dp"
+        android:textSize="18sp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Manueller Getränkeausschank:"
+        android:textSize="@dimen/textSizes"
+        android:id="@+id/textViewWartungManuell"
+        android:layout_below="@+id/textViewWartungHeadline"
+        android:layout_toEndOf="@+id/dividerVertical"
+        />
+</RelativeLayout>

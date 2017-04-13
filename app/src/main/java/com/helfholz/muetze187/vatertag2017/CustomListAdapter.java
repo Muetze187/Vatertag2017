@@ -1,5 +1,6 @@
 package com.helfholz.muetze187.vatertag2017;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +24,13 @@ public class CustomListAdapter extends BaseAdapter {
     public CustomListAdapter(MainActivity aContext, ArrayList<Teams> listData) {
         this.listData = listData;
         layoutInflater = LayoutInflater.from(aContext);
+
+    }
+
+    public CustomListAdapter(BlauzahnActivity aContext, ArrayList<Teams> listData) {
+        this.listData = listData;
+        layoutInflater = LayoutInflater.from(aContext);
+
     }
 
     @Override
@@ -44,7 +52,7 @@ public class CustomListAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
 
         if (convertView == null) {
-            convertView = layoutInflater.inflate(R.layout.team_listview, null);
+           convertView = layoutInflater.inflate(R.layout.team_listview, parent, false);
             holder = new ViewHolder();
             holder.teamNameView = (TextView) convertView.findViewById(R.id.name);
             holder.teamDrunkView = (TextView) convertView.findViewById(R.id.drunk);

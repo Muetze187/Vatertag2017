@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPink"
+        android:layout_alignParentStart="true"
+        android:id="@+id/textViewActionSpeichern"
+        android:textSize="@dimen/textSizes"
+        android:text="Wirklich die Teams speichern?"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ja"
+        android:textSize="@dimen/textSizes"
+        android:layout_alignParentStart="true"
+        android:id="@+id/buttonJaSpeichern"
+        android:layout_below="@+id/textViewActionSpeichern"
+       />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nein"
+        android:textSize="@dimen/textSizes"
+        android:id="@+id/buttonNeinSpeichern"
+        android:layout_below="@+id/textViewActionSpeichern"
+        android:layout_alignRight="@+id/textViewActionSpeichern"/>
+
+
+
+</RelativeLayout>

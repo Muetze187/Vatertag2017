@@ -2,10 +2,13 @@ package com.helfholz.muetze187.vatertag2017;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -17,16 +20,18 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.SoundPool;
 import android.net.Uri;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.os.Bundle;
-import android.provider.SyncStateContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.multidex.MultiDex;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -34,7 +39,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -64,39 +68,47 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.nearby.messages.Distance;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.lang.reflect.Array;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
+
+import static com.helfholz.muetze187.vatertag2017.BlauzahnActivity.textViewinfo;
 
 public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener, MediaPlayer.OnCompletionListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     //Gui Elements
+    boolean successBT = false;
+    static boolean alertOn = true;
+    static boolean isOneAlarmed = false;
+    static String msg = "";
+    Switch switchAlarm;
     TextView textViewDateTime;
-    TextView textFett;
+    static TextView textFett;
     TextView adelheid;
-    ListView listViewTeams;
+    static ListView listViewTeams;
     TextView textViewAmountDrink;
     TextView textViewGlueckwunsch;
+    TextView textViewNameChoose;
     TextView distanceMarkers;
+    EditText editTextMAC;
+    TextView textViewReceive;
     final String DRINKAMOUNT = "Zu trinkende Menge: ";
-    final String GLUECKWUNSCH = "Glückwunsch! Dies wird euer ";
     int currentSong;
-    CustomListAdapter adapterTeamList;
+    static CustomListAdapter adapterTeamList;
     ArrayAdapter<String> adapterSpinner;
-    ArrayList<Teams> teamList = new ArrayList<Teams>();
+    static ArrayList<Teams> teamList = new ArrayList<Teams>();
 
     ArrayList<String> music = new ArrayList<String>();
     ArrayList<String> musicTrimmed = new ArrayList<String>();
@@ -109,14 +121,17 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     static Handler hMusic;
     Handler hBlinzeln;
     Handler hAlert;
+    Handler checkBTstate;
+    Handler checkIncoming;
     static boolean isStarted;
     static boolean fromIntent;
     boolean isShuffle;
     Date date;
     SimpleDateFormat dateFormat;
     String s;
-    Button buttonLoad, buttonSave;
     Button buttonRandomDrink;
+    Button btON, btOFF, btConnect;
+    Button drink1, drink2, drink3;
     static MediaPlayer mediaPlayerMusic;
     MediaPlayer mp;
     //TESTS
@@ -139,6 +154,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     Dialog dialogDeleteTeam;
     Dialog dialogChooseDrink;
     Dialog dialogDrinkAccepted;
+    Dialog dialogBT;
     ImageView imageViewPigOpenEyes, imageViewPigClosedEyes;
     ImageView imageViewDrink1, imageViewDrink2, imageViewDrink3;
     private float x1, x2;
@@ -154,6 +170,21 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     private Switch switchMap;
     private Thread.UncaughtExceptionHandler defaultUEH;
     private Animation animShake;
+    Thread thread, threadReceive;
+    //BT
+    private static final String LOG_TAG_DRILLO = "Drillo";
+    private static OutputStream stream_out = null;
+    private static InputStream stream_in = null;
+    static BluetoothHandler handlerBT;
+    Button buttonHeartbeatDrillo;
+    static IntentFilter filter;
+    static String receivedMessage = "";
+    int teamPos;
+    int originalVolume;
+    private SoundPool soundPool;
+    int soundAlarm;
+    int volume;
+    int position2;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -162,14 +193,12 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         if (resultCode == 200) {
 
             name = data.getExtras().getString("filename");
-            play.setBackgroundResource(R.drawable.ic_pause);
+            play.setBackgroundResource(R.drawable.pausecircularbutton);
             if (!name.isEmpty()) {
                 int spinnerPos = adapterSpinner.getPosition("/TD/" + name);
-                for(int i =0 ; i < music.size(); i++)
-                {
+                for (int i = 0; i < music.size(); i++) {
                     String tmp = music.get(i).toString();
-                    Log.e("music coming from intent", tmp.toString() + " musicString: " + music.get(i).toString());
-                    if(tmp.contains(name)){
+                    if (tmp.contains(name)) {
                         spinner.setSelection(i);
                         currentSong = i;
                     }
@@ -205,6 +234,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     // consider as something else - a screen tap for example
                 }
                 break;
+
         }
         return super.onTouchEvent(event);
     }
@@ -215,34 +245,26 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         super.onCreate(savedInstanceState);
         //hide statusbar
         hideStatusBar();
+
         //set layout
         setContentView(R.layout.activity_main);
+
         //force landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         //Maps
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        //Location
+
+        filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
 
         //init GUI
         textViewDateTime = (TextView) findViewById(R.id.textViewDateTime);
         textFett = (TextView) findViewById(R.id.textViewFett);
         distanceMarkers = (TextView) findViewById(R.id.textViewDistance);
-        textFett.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
 
-                if(counter == 3){
-                    Intent intent = new Intent(MainActivity.this, BlauzahnActivity.class);
-                    startActivity(intent);
-                    counter = 0;
-                }else{
-                    counter++;
-                }
-
-
-            }
-        });
         adelheid = (TextView) findViewById(R.id.textView2);
         play = (ImageButton) findViewById(R.id.play);
         prev = (ImageButton) findViewById(R.id.prev);
@@ -261,7 +283,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         }
 
 
-
         //TESTS
         spinner = (Spinner) findViewById(R.id.spinner);
         adapterSpinner = new ArrayAdapter<String>(this,
@@ -272,31 +293,41 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorPink), PorterDuff.Mode.SRC_ATOP);
         //Dialogs
         dialogChangeName = new Dialog(MainActivity.this);
+        dialogChangeName.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialogChangeName.setContentView(R.layout.team_dialog_changename);
         dialogChangeName.setCanceledOnTouchOutside(true);
         dialogChangeName.setCancelable(true);
+        dialogChangeName.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialogNewTeam = new Dialog(MainActivity.this);
+        dialogNewTeam.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialogNewTeam.setContentView(R.layout.team_dialog_changename);
         dialogNewTeam.setCancelable(true);
         dialogNewTeam.setCanceledOnTouchOutside(true);
+        dialogNewTeam.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialogTeamChoice = new Dialog(MainActivity.this);
+        dialogTeamChoice.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialogTeamChoice.setContentView(R.layout.team_dialog_choice);
-        dialogTeamChoice.setTitle("Wähle weise...");
         dialogTeamChoice.setCancelable(true);
         dialogTeamChoice.setCanceledOnTouchOutside(true);
         dialogTeamChoice.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialogDeleteTeam = new Dialog(MainActivity.this);
+        dialogDeleteTeam.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialogDeleteTeam.setContentView(R.layout.team_dialog_delete);
         dialogDeleteTeam.setCanceledOnTouchOutside(true);
         dialogDeleteTeam.setCancelable(true);
+        dialogDeleteTeam.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialogChooseDrink = new Dialog(MainActivity.this);
-        dialogChooseDrink.setContentView(R.layout.choose_drink);
+        dialogChooseDrink.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialogChooseDrink.setContentView(R.layout.team_dialog_choose_drink);
         dialogChooseDrink.setCanceledOnTouchOutside(false);
+        dialogChooseDrink.setCancelable(false);
         dialogChooseDrink.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialogDrinkAccepted = new Dialog(MainActivity.this);
+        dialogDrinkAccepted.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialogDrinkAccepted.setContentView(R.layout.drink_acception);
         dialogDrinkAccepted.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
+        dialogBT = new Dialog(MainActivity.this);
+        dialogBT.setContentView(R.layout.activity_blauzahn);
 
         //music seekbar
         seekBarMusic = (SeekBar) findViewById(R.id.seekBarMusic);
@@ -307,24 +338,33 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         imageViewPigClosedEyes = (ImageView) dialogTeamChoice.findViewById(R.id.imageViewPigClosedEyes);
         imageViewPigOpenEyes = (ImageView) dialogTeamChoice.findViewById(R.id.imageViewPigOpenEyes);
         imageViewPigClosedEyes.setVisibility(View.INVISIBLE);
-        imageViewDrink1 = (ImageView) dialogChooseDrink.findViewById(R.id.imageView);
-        imageViewDrink2 = (ImageView) dialogChooseDrink.findViewById(R.id.imageView2);
-        imageViewDrink3 = (ImageView) dialogChooseDrink.findViewById(R.id.imageView3);
+        imageViewDrink1 = (ImageView) dialogChooseDrink.findViewById(R.id.imageViewChooseDrink1);
+        imageViewDrink2 = (ImageView) dialogChooseDrink.findViewById(R.id.imageViewChooseDrink2);
+        imageViewDrink3 = (ImageView) dialogChooseDrink.findViewById(R.id.imageViewChooseDrink3);
+
 
         progress = 0;
 
+        //SOUNDS
         audioManager = (AudioManager) getSystemService(this.AUDIO_SERVICE);
+        originalVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
 
+        soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
+        soundAlarm = soundPool.load(this,R.raw.foghorndanielsimon,1);
+
+        int maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+
+        volume = originalVolume / maxVol;
 
         defaultUEH = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(_unCaughtExceptionHandler);
 
 
-        adapterTeamList = new CustomListAdapter(this, teamList);
-        //mAdapter= new ArrayAdapter<String>(this,
-        //        android.R.layout.simple_list_item_1, musicTrimmed);
+        //buttonHeartbeatDrillo = (Button) findViewById(R.id.buttonFettACTION);
 
-        // mListView.setAdapter(mAdapter);
+        adapterTeamList = new CustomListAdapter(this, teamList);
+
+
         listViewTeams.setAdapter(adapterTeamList);
         Log.d("liste1", music.get(0).toString());
         Log.d("listelast", music.get(music.size() - 1).toString());
@@ -332,20 +372,60 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         //init Handlers
         initHandlers();
 
+        handlerBT = BluetoothHandler.getHandlerBT(this);
+        checkBTstate = new Handler();
+        checkIncoming = new Handler();
+        checkBT();
+        checkIncomingArduino.run();
+        if (handlerBT.getBtAdapter().isEnabled()) {
+            handlerBT.setIsBtOn(true);
+        }
+
+
         mediaPlayerMusic = new MediaPlayer();
         mediaPlayerMusic.setOnCompletionListener(this);
 
-        mp = MediaPlayer.create(this, R.raw.schweinquieken);
+        mp = MediaPlayer.create(this, R.raw.foghorndanielsimon);
         buttonRandomDrink = (Button) dialogChooseDrink.findViewById(R.id.buttonRandom);
 
-        locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+
+        textViewDateTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                fadeOut();
+            }
+        });
+
+
+        textFett.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Intent intent = new Intent(MainActivity.this, BlauzahnActivity.class);
+                startActivity(intent);
+
+            }
+        });
+
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, new android.location.LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
 
-                if(mapCentered){
+                if (mapCentered) {
                     mLastLocation = location;
-                    Log.d("onLocationChangedOwweProvider", location.getLatitude() + "" +location.getLongitude());
+                    Log.d("onLocationChangedOwweProvider", location.getLatitude() + "" + location.getLongitude());
                     LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
@@ -357,7 +437,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     LatLng latLngFinish = markerGoal.getPosition();
                     finish.setLatitude(latLngFinish.latitude);
                     finish.setLongitude(latLngFinish.longitude);
-                    float distance = (int)start.distanceTo(finish);
+                    float distance = (int) start.distanceTo(finish);
                     distanceMarkers.setText(distanceMarkers.getText().toString() + distance);
                 }
 
@@ -382,9 +462,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             @Override
             public void onLocationChanged(Location location) {
 
-                if(mapCentered){
+                if (mapCentered) {
                     mLastLocation = location;
-                    Log.d("onLocationChangedOwweGPS", location.getLatitude() + "" +location.getLongitude());
+                    Log.d("onLocationChangedOwweGPS", location.getLatitude() + "" + location.getLongitude());
                     LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
@@ -396,7 +476,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     LatLng latLngFinish = markerGoal.getPosition();
                     finish.setLatitude(latLngFinish.latitude);
                     finish.setLongitude(latLngFinish.longitude);
-                    float distance = (int)start.distanceTo(finish);
+                    float distance = (int) start.distanceTo(finish);
                     distanceMarkers.setText("Noch zu Wandern: " + distance);
 
                 }
@@ -424,11 +504,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         switchMap.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b){
+                if (b) {
                     mapCentered = true;
                     LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-                }else{
+                } else {
                     mapCentered = false;
                 }
             }
@@ -440,17 +520,14 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 Log.e("IM HERE! FOR NO REASON", "");
                 try {
-                    if(fromIntent){
+                    if (fromIntent) {
                         fromIntent = false;
-                    }
-                    else if(!isStarted)
-                    {
+                    } else if (!isStarted) {
                         currentSong = i;
-                    }
-                    else{
+                    } else {
                         playSong(music.get(i));
                         isStarted = true;
-                        play.setBackgroundResource(R.drawable.ic_pause);
+                        play.setBackgroundResource(R.drawable.pausecircularbutton);
                         currentSong = i;
                         fromIntent = false;
                     }
@@ -475,11 +552,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 if (isStarted) {
                     if (mediaPlayerMusic.isPlaying()) {
                         mediaPlayerMusic.pause();
-                        play.setBackgroundResource(R.drawable.ic_play);
+                        play.setBackgroundResource(R.drawable.playcircularbutton);
 
                     } else {
                         mediaPlayerMusic.start();
-                        play.setBackgroundResource(R.drawable.ic_pause);
+                        play.setBackgroundResource(R.drawable.pausecircularbutton);
                     }
                     fromIntent = false;
                 } else {
@@ -488,7 +565,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         isStarted = true;
                         fromIntent = false;
                         spinner.setSelection(currentSong);
-                        play.setBackgroundResource(R.drawable.ic_pause);
+                        play.setBackgroundResource(R.drawable.pausecircularbutton);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -521,7 +598,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                             e.printStackTrace();
                         }
                     }
-                    play.setBackgroundResource(R.drawable.ic_pause);
+                    play.setBackgroundResource(R.drawable.pausecircularbutton);
                 }
                 fromIntent = false;
 
@@ -553,7 +630,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                             e.printStackTrace();
                         }
                     }
-                    play.setBackgroundResource(R.drawable.ic_pause);
+                    play.setBackgroundResource(R.drawable.pausecircularbutton);
                 }
                 fromIntent = false;
 
@@ -563,9 +640,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         shuffle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(), FileExplorer.class);
-                startActivity(intent);
-
+                //Intent intent = new Intent(getApplicationContext(), FileExplorer.class);
+                //startActivity(intent);
+                fadeIn();
                /* if(isShuffle){
                     isShuffle = false;
                     shuffle.setBackgroundResource(R.drawable.ic_shuffle);
@@ -580,216 +657,130 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             }
         });
 
-       /* mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
-                                    long arg3) {
-                        try {
-                            playSong(music.get(arg2));
-                            currentSong = arg2;
-                            play.setBackgroundResource(R.drawable.ic_pause);
-                            isStarted = true;
-                            spinner.setSelection(currentSong);
-                        } catch (IllegalArgumentException e) {
-                            e.printStackTrace();
-                        } catch (IllegalStateException e) {
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-
-
-        });*/
 
         listViewTeams.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, final int position, long l) {
                 Object o = listViewTeams.getItemAtPosition(position);
+                position2 = position;
                 Button buttonChangeName = (Button) dialogTeamChoice.findViewById(R.id.buttonChangeName);
                 Button buttonDeleteTeam = (Button) dialogTeamChoice.findViewById(R.id.buttonDelete);
                 Button buttonNewTeam = (Button) dialogTeamChoice.findViewById(R.id.buttonNewTeam);
                 textViewAmountDrink = (TextView) dialogChooseDrink.findViewById(R.id.textViewMengeDrink);
                 textViewGlueckwunsch = (TextView) dialogChooseDrink.findViewById(R.id.textViewGlueckwunsch);
-
+                textViewNameChoose = (TextView) dialogChooseDrink.findViewById(R.id.textViewNameChoose);
 
                 buttonRandomDrink.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         //Log.d("haschoosen","haschoosen beginn Mischen" +hasChoosen);
 
-                        hasChoosen++;
+                        //hasChoosen++;
                         amountToDrink *= 2;
-                        textViewAmountDrink.setText(DRINKAMOUNT + amountToDrink +" cl");
+                        textViewAmountDrink.setText(DRINKAMOUNT + amountToDrink + " cl");
 
-                        Log.d("drink","drink beginn Mischen" +drink);
-                        Log.d("drink","OLDdrink beginn Mischen" +oldDrink);
-                        Log.d("drink","TMP beginn Mischen" +tmp);
-                        Log.d("drink","Amount beginn Mischen" +amountToDrink);
+                        Log.d("drink", "drink beginn Mischen" + drink);
+                        Log.d("drink", "OLDdrink beginn Mischen" + oldDrink);
+                        Log.d("drink", "TMP beginn Mischen" + tmp);
+                        Log.d("drink", "Amount beginn Mischen" + amountToDrink);
 
-                        if(drink == 0)
+                        if (drink == 0)
                             imageViewDrink1.setColorFilter(Color.RED);
-                        if(drink == 1)
+                        if (drink == 1)
                             imageViewDrink2.setColorFilter(Color.RED);
-                        if(drink == 2)
+                        if (drink == 2)
                             imageViewDrink3.setColorFilter(Color.RED);
-                        if(hasChoosen == 1){
+                      /*  if(hasChoosen == 1){
                             buttonRandomDrink.setText("Alternative");
-                        }
-                        if(hasChoosen < 2){
+                        }*/
+                /*        if(hasChoosen < 2){
                             getRandomDrink();
                             buttonRandomDrink.setAnimation(animShake);
                         }
                         else
                         {
-
-                            if((tmp == 0 && drink == 1) || (tmp  == 1 && drink == 0)){
-                                imageViewDrink1.setColorFilter(Color.RED);
-                                imageViewDrink2.setColorFilter(Color.RED);
-                                imageViewDrink3.setColorFilter(Color.GREEN);
-                                imageViewDrink3.startAnimation(animShake);
-                                imageViewDrink1.clearAnimation();
-                                imageViewDrink2.clearAnimation();
-                                winnerDrink = 3;
-                            }else if((tmp  == 0 && drink == 2 ) || (drink == 0 && tmp == 2)){
-                                imageViewDrink1.setColorFilter(Color.RED);
-                                imageViewDrink2.setColorFilter(Color.GREEN);
-                                imageViewDrink3.setColorFilter(Color.RED);
-                                imageViewDrink2.startAnimation(animShake);
-                                imageViewDrink1.clearAnimation();
-                                imageViewDrink3.clearAnimation();
-                                winnerDrink = 2;
-                            }else{
-                                imageViewDrink1.setColorFilter(Color.GREEN);
-                                imageViewDrink2.setColorFilter(Color.RED);
-                                imageViewDrink3.setColorFilter(Color.RED);
-                                imageViewDrink1.startAnimation(animShake);
-                                imageViewDrink2.clearAnimation();
-                                imageViewDrink3.clearAnimation();
-                                winnerDrink = 1;
-                            }
-
-                            finishDialogChooseDrink(position);
-
+*/
+                        getRandomDrink();
+                        if ((tmp == 0 && drink == 1) || (tmp == 1 && drink == 0)) {
+                            imageViewDrink1.setColorFilter(Color.RED);
+                            imageViewDrink2.setColorFilter(Color.RED);
+                            imageViewDrink3.setColorFilter(Color.GREEN);
+                            imageViewDrink3.startAnimation(animShake);
+                            imageViewDrink1.clearAnimation();
+                            imageViewDrink2.clearAnimation();
+                            winnerDrink = 3;
+                        } else if ((tmp == 0 && drink == 2) || (drink == 0 && tmp == 2)) {
+                            imageViewDrink1.setColorFilter(Color.RED);
+                            imageViewDrink2.setColorFilter(Color.GREEN);
+                            imageViewDrink3.setColorFilter(Color.RED);
+                            imageViewDrink2.startAnimation(animShake);
+                            imageViewDrink1.clearAnimation();
+                            imageViewDrink3.clearAnimation();
+                            winnerDrink = 2;
+                        } else {
+                            imageViewDrink1.setColorFilter(Color.GREEN);
+                            imageViewDrink2.setColorFilter(Color.RED);
+                            imageViewDrink3.setColorFilter(Color.RED);
+                            imageViewDrink1.startAnimation(animShake);
+                            imageViewDrink2.clearAnimation();
+                            imageViewDrink3.clearAnimation();
+                            winnerDrink = 1;
                         }
+
+                        finishDialogChooseDrink(position);
 
                     }
+
+
                 });
-                if(teamList.get(position).getAlerted()) {
-                    //Random rnd = new Random();
-                    resetDrinkDialog();
-                    textViewAmountDrink.setText(DRINKAMOUNT + amountToDrink +" cl");
-                    textViewGlueckwunsch.setText(GLUECKWUNSCH + teamList.get(position).getDrunkPlain() + ". Schnaps sein!");
-                    //int drink = rnd.nextInt(3);
-                    getRandomDrink();
-                    oldDrink = drink;
-                    Log.d("drink","drink initial" +drink);
+                if (teamList.get(position).getAlerted()) {
+                    doTheShit();
 
+                } else {
 
-                    dialogChooseDrink.show();
-                    final Button buttonOK = (Button) dialogDrinkAccepted.findViewById(R.id.buttonDrinkOk);
-                    final Button buttonCancel = (Button) dialogDrinkAccepted.findViewById(R.id.buttonDrinkCancel);
-
-                    imageViewDrink1.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            if(drink == 0){
-                                dialogDrinkAccepted.show();
-                                buttonOK.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View view) {
-                                        Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
-                                        dialogDrinkAccepted.dismiss();
-                                        winnerDrink = 1;
-                                        finishDialogChooseDrink(position);
-                                    }
-                                });
-                                buttonCancel.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View view) {
-                                            dialogDrinkAccepted.dismiss();
-                                    }
-                                });
-
-                            }
-                        }
-                    });
-
-                    imageViewDrink2.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            if(drink == 1){
-                                dialogDrinkAccepted.show();
-                                buttonOK.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View view) {
-                                        Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
-                                        dialogDrinkAccepted.dismiss();
-                                        winnerDrink = 2;
-                                        finishDialogChooseDrink(position);
-                                    }
-                                });
-                                buttonCancel.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View view) {
-                                        dialogDrinkAccepted.dismiss();
-
-                                    }
-                                });
-                            }
-                        }
-                    });
-
-                    imageViewDrink3.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            if(drink == 2){
-                                dialogDrinkAccepted.show();
-                                buttonOK.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View view) {
-                                        Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
-                                        dialogDrinkAccepted.dismiss();
-                                        winnerDrink = 3;
-                                        finishDialogChooseDrink(position);
-                                    }
-                                });
-                                buttonCancel.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View view) {
-                                        dialogDrinkAccepted.dismiss();
-                                    }
-                                });
-                            }
-                        }
-                    });
-
-
-
-
-                }
-                else{
-                    blizeldiewinzel();
                     buttonChangeName.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            dialogChangeName.setTitle("Teamname ändern");
-                            Button buttonOK = (Button) dialogChangeName.findViewById(R.id.button3);
-                            final EditText editName = (EditText) dialogChangeName.findViewById(R.id.editText2);
+                            //TODO BUG evtl, Tatstatu geht net hoch...
+                            //dialogChangeName.setTitle("Teamname ändern");
+                            Button buttonOK = (Button) dialogChangeName.findViewById(R.id.buttonChangeTeamOK);
+                            final EditText editName = (EditText) dialogChangeName.findViewById(R.id.editTextChangeTeam);
+                            final EditText editMemberOne = (EditText) dialogChangeName.findViewById(R.id.editTextChangeMemberOne);
+                            final EditText editMemberTwo = (EditText) dialogChangeName.findViewById(R.id.editTextChangeMemberTwo);
+
                             dialogChangeName.setCanceledOnTouchOutside(true);
                             dialogChangeName.show();
                             buttonOK.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {
                                     String tmp = editName.getText().toString();
-                                    if (editName.getText().toString().equals(""))
+                                    String tmp2 = editMemberOne.getText().toString();
+                                    String tmp3 = editMemberTwo.getText().toString();
+                                    if (editName.getText().toString().equals("")){
                                         teamList.get(position).setName("no name selected");
-                                    else
+                                    }
+                                    else{
                                         teamList.get(position).setName(tmp);
+                                    }
+
+                                    if (editMemberOne.getText().toString().equals("")){
+                                        teamList.get(position).setMemberOne("no name selected");
+                                    }
+                                    else{
+                                        teamList.get(position).setMemberOne(tmp2);
+                                    }
+
+                                    if (editMemberTwo.getText().toString().equals("")){
+                                        teamList.get(position).setMemberTwo("no name selected");
+                                    }
+                                    else{
+                                        teamList.get(position).setMemberTwo(tmp3);
+                                    }
+
                                     adapterTeamList.notifyDataSetChanged();
                                     editName.setText("");
+                                    editMemberOne.setText("");
+                                    editMemberTwo.setText("");
                                     dialogChangeName.dismiss();
                                 }
                             });
@@ -815,6 +806,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                 @Override
                                 public void onClick(View view) {
                                     dialogDeleteTeam.dismiss();
+
                                 }
                             });
 
@@ -825,8 +817,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         @Override
                         public void onClick(View view) {
                             dialogNewTeam.setTitle("Teamname wählen");
-                            Button buttonOK = (Button) dialogNewTeam.findViewById(R.id.button3);
-                            final EditText editName = (EditText) dialogNewTeam.findViewById(R.id.editText2);
+                            Button buttonOK = (Button) dialogNewTeam.findViewById(R.id.buttonChangeTeamOK);
+                            final EditText editName = (EditText) dialogNewTeam.findViewById(R.id.editTextChangeTeam);
+                            final EditText editMemberOne = (EditText) dialogNewTeam.findViewById(R.id.editTextChangeMemberOne);
+                            final EditText editMemberTwo = (EditText) dialogNewTeam.findViewById(R.id.editTextChangeMemberTwo);
                             dialogNewTeam.show();
                             imageViewPigClosedEyes.setImageResource(R.drawable.schwein);
                             buttonOK.setOnClickListener(new View.OnClickListener() {
@@ -834,21 +828,43 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                 public void onClick(View view) {
                                     Teams team = new Teams();
                                     String tmp = editName.getText().toString();
-                                    if (editName.getText().toString().equals(""))
+                                    String tmp2 = editMemberOne.getText().toString();
+                                    String tmp3 = editMemberTwo.getText().toString();
+                                    if (editName.getText().toString().equals("")){
                                         team.setName("no name selected");
-                                    else
+                                    }
+                                    else{
                                         team.setName(tmp);
+                                    }
+                                    if (editMemberOne.getText().toString().equals("")){
+                                        team.setMemberOne("no name selected");
+                                    }
+                                    else{
+                                        team.setMemberOne(tmp2);
+                                    }
+
+                                    if (editMemberTwo.getText().toString().equals("")){
+                                        team.setMemberTwo("no name selected");
+                                    }
+                                    else{
+                                        team.setMemberTwo(tmp3);
+                                    }
+
+
                                     team.setDrunk(0);
                                     teamList.add(0, team);
                                     adapterTeamList.notifyDataSetChanged();
                                     editName.setText("");
+                                    editMemberOne.setText("");
+                                    editMemberTwo.setText("");
                                     dialogNewTeam.dismiss();
+
                                 }
                             });
                         }
                     });
 
-
+                    blizeldiewinzel();
                     dialogTeamChoice.show();
 
                 }
@@ -856,32 +872,40 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             }
         });
 
-        buttonLoad = (Button) findViewById(R.id.buttonLaden);
-
-
-        buttonSave = (Button) findViewById(R.id.buttonSpeichern);
-
-        buttonSave.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                saveTeams();
-            }
-        });
-
-        buttonLoad.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                loadTeams();
-            }
-
-        });
-
         setupDateFormat();
         showTimeAndDate();
         alarmTeam();
-        loadTeams();
+        //checkBT();
 
     }
+
+        public static void empfangen() {
+            byte[] buffer = new byte[1024]; // Puffer
+            int laenge; // Anzahl empf. Bytes
+
+            stream_in = handlerBT.getStream_in();
+            stream_out = handlerBT.getStream_out();
+            try {
+                if (stream_in.available() > 0) {
+                    laenge = stream_in.read(buffer);
+                    Log.d(LOG_TAG_DRILLO,
+                            "Anzahl empfangender Bytes: " + String.valueOf(laenge));
+
+                    // Message zusammensetzen:
+                    for (int i = 0; i < laenge; i++)
+                        msg += (char) buffer[i];
+
+                    Log.d(LOG_TAG_DRILLO, "Message: " + msg);
+                    //Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                    textViewinfo.setText(msg);
+
+                } else{}
+                    //Toast.makeText(this, "Nichts empfangen", Toast.LENGTH_LONG)
+                            //.show();
+            } catch (Exception e) {
+                Log.e(LOG_TAG_DRILLO, "Fehler beim Empfangen: " + e.toString());
+            }
+        }
 
     private void saveTeams(){
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
@@ -896,7 +920,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
     private void loadTeams(){
-        ArrayList<Teams> tmp = new ArrayList<Teams>();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         Gson gson = new Gson();
         String json = prefs.getString("Teams",null);
@@ -912,6 +935,118 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         listViewTeams.setAdapter(adapterTeamList);
         adapterTeamList.notifyDataSetChanged();
     }
+
+    ////////////////////////----------------------------\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\TODO
+
+    private void doTheShit(){
+        resetDrinkDialog();
+//        Log.e("Name des Members", textViewNameChoose.getText().toString());
+//        Log.e("MembersUno","" +teamList.get(position2).getMemberOne());
+//        Log.e("MembersDuo",""+teamList.get(position2).getMemberTwo());
+        if(textViewNameChoose.getText().toString().contains(teamList.get(position2).getMemberOne().toString())){
+            textViewNameChoose.setText(teamList.get(position2).getMemberTwo().toString() + " @ " + teamList.get(position2).getName().toString());
+        }else{
+            textViewNameChoose.setText(teamList.get(position2).getMemberOne().toString() + " @ " + teamList.get(position2).getName().toString());
+        }
+
+        textViewAmountDrink.setText(DRINKAMOUNT + amountToDrink + " cl");
+        textViewGlueckwunsch.setText("Glückwunsch! Dies ist euer " + teamList.get(position2).getDrunkPlain() + ". Schnaps!");
+        //int drink = rnd.nextInt(3);
+
+        getRandomDrink();
+        oldDrink = drink;
+        Log.d("drink", "drink initial" + drink);
+
+
+        dialogChooseDrink.show();
+        final Button buttonOK = (Button) dialogDrinkAccepted.findViewById(R.id.buttonDrinkOk);
+        final Button buttonCancel = (Button) dialogDrinkAccepted.findViewById(R.id.buttonDrinkCancel);
+
+        imageViewDrink1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (drink == 0) {
+                    dialogDrinkAccepted.show();
+                    buttonOK.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            //Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
+                            dialogDrinkAccepted.dismiss();
+                            winnerDrink = 1;
+                            finishDialogChooseDrink(position2);
+                        }
+                    });
+                    buttonCancel.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            dialogDrinkAccepted.dismiss();
+                        }
+                    });
+
+                }
+            }
+        });
+
+        imageViewDrink2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (drink == 1) {
+                    dialogDrinkAccepted.show();
+                    buttonOK.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            //Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
+                            dialogDrinkAccepted.dismiss();
+                            winnerDrink = 2;
+                            finishDialogChooseDrink(position2);
+                        }
+                    });
+                    buttonCancel.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            dialogDrinkAccepted.dismiss();
+
+                        }
+                    });
+                }
+            }
+        });
+
+        imageViewDrink3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (drink == 2) {
+                    dialogDrinkAccepted.show();
+                    buttonOK.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            //Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
+                            dialogDrinkAccepted.dismiss();
+                            winnerDrink = 3;
+                            finishDialogChooseDrink(position2);
+                        }
+                    });
+                    buttonCancel.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            dialogDrinkAccepted.dismiss();
+                        }
+                    });
+                }
+            }
+        });
+
+    }
+
+
+
+
+    ////////////////////////----------------------------\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\TODO
+
+
+
+
+
 
     private void resetDrinkDialog(){
         hasChoosen = 0;
@@ -930,6 +1065,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
     private void finishDialogChooseDrink(int pos){
+        teamPos = pos;
         buttonRandomDrink.setText("Prost!");
         buttonRandomDrink.setEnabled(false);
         imageViewDrink1.setEnabled(false);
@@ -940,33 +1076,96 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         imageViewDrink3.clearAnimation();
         teamList.get(pos).increaseStrackLevel(10);
         teamList.get(pos).setDrunk(teamList.get(pos).getDrunkPlain());
+        teamList.get(pos).setAlerted(false);
+        isOneAlarmed = false;
 
         switch (winnerDrink){
             case 1:
                 teamList.get(pos).setCounterOne(teamList.get(pos).getCounterOne() + 1);
+                imageViewDrink1.setColorFilter(Color.GREEN);
+                imageViewDrink2.setColorFilter(Color.RED);
+                imageViewDrink3.setColorFilter(Color.RED);
+                if(amountToDrink == 2)
+                    handlerBT.sendBT("AS.1_2#");
+                else
+                    handlerBT.sendBT("AS.1_4#");
+                Log.e("drink 1 wird geschickt","" + amountToDrink + " cl");
                 break;
             case 2:
                 teamList.get(pos).setCounterTwo(teamList.get(pos).getCounterTwo() + 1);
+                imageViewDrink1.setColorFilter(Color.RED);
+                imageViewDrink2.setColorFilter(Color.GREEN);
+                imageViewDrink3.setColorFilter(Color.RED);
+                if(amountToDrink == 2)
+                    handlerBT.sendBT("AS:2_2#");
+                else
+                    handlerBT.sendBT("AS:2_4#");
+                Log.e("drink 2 wird geschickt","" + amountToDrink + " cl");
                 break;
             case 3:
                 teamList.get(pos).setCounterThree(teamList.get(pos).getCounterThree() + 1);
+                imageViewDrink1.setColorFilter(Color.RED);
+                imageViewDrink2.setColorFilter(Color.RED);
+                imageViewDrink3.setColorFilter(Color.GREEN);
+                if(amountToDrink == 2)
+                    handlerBT.sendBT("AS:3_2#");
+                else
+                    handlerBT.sendBT("AS:3_4#");
+                Log.e("drink 3 wird geschickt","" + amountToDrink + " cl");
                 break;
         }
 
         new CountDownTimer(5000, 1000) {
-
+            int tmp = 0;
             @Override
             public void onTick(long millisUntilFinished) {
-                // TODO Auto-generated method stub
 
+               /* if(msg.contains("12 ausgeschenkt")){
+                    tmp = 1;
+                }else if(msg.contains("22 ausgeschenkt")){
+                    tmp = 2;
+                }else if(msg.contains("22 ausgeschenkt")){
+                    tmp = 3;
+                }*/
             }
 
             @Override
             public void onFinish() {
-                // TODO Auto-generated method stub
+                // TODO ALLE Werte erst hier setzen mit switch/case
 
-                dialogChooseDrink.dismiss();
+                //if(msg.contains("AS:DONE#"))
+                    doTheShit();
+                    //Toast.makeText(getApplicationContext(), "JUHU!", Toast.LENGTH_SHORT).show ();
+
+             /*   switch (tmp){
+                    case 1:
+                        teamList.get(teamPos).increaseStrackLevel(10);
+                        teamList.get(teamPos).setDrunk(teamList.get(teamPos).getDrunkPlain());
+                        teamList.get(teamPos).setAlerted(false);
+                        teamList.get(teamPos).setCounterOne(teamList.get(teamPos).getCounterOne() + 1);
+                        break;
+                    case 2:
+                        teamList.get(teamPos).increaseStrackLevel(10);
+                        teamList.get(teamPos).setDrunk(teamList.get(teamPos).getDrunkPlain());
+                        teamList.get(teamPos).setAlerted(false);
+                        teamList.get(teamPos).setCounterTwo(teamList.get(teamPos).getCounterTwo() + 1);
+                        break;
+                    case 3:
+                        teamList.get(teamPos).increaseStrackLevel(10);
+                        teamList.get(teamPos).setDrunk(teamList.get(teamPos).getDrunkPlain());
+                        teamList.get(teamPos).setAlerted(false);
+                        teamList.get(teamPos).setCounterThree(teamList.get(teamPos).getCounterTwo() + 1);
+                }*/
+
+               /* if(tmp){
+                    Toast.makeText(getApplicationContext(), "JUHU er sendet!", Toast.LENGTH_SHORT).show ();
+                }*/
+               //fadeIn();
+                //dialogChooseDrink.dismiss();
                 adapterTeamList.notifyDataSetChanged();
+                msg = "";
+                //tmp = false;
+
             }
         }.start();
 
@@ -985,30 +1184,32 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         else{
             switch(drink){
                 case 0:
-                    imageViewDrink1.setImageResource(R.drawable.number1_pink);
-                    imageViewDrink2.setImageResource(R.drawable.number2);
-                    imageViewDrink3.setImageResource(R.drawable.number3);
+                    imageViewDrink1.setImageResource(R.drawable.number1pink);
+                    imageViewDrink2.setImageResource(R.drawable.number2white);
+                    imageViewDrink3.setImageResource(R.drawable.number3white);
                     imageViewDrink1.startAnimation(animShake);
                     imageViewDrink2.clearAnimation();
                     imageViewDrink3.clearAnimation();
                     break;
                 case 1:
-                    imageViewDrink2.setImageResource(R.drawable.number2_pink);
-                    imageViewDrink1.setImageResource(R.drawable.number1);
-                    imageViewDrink3.setImageResource(R.drawable.number3);
+                    imageViewDrink2.setImageResource(R.drawable.number2pink);
+                    imageViewDrink1.setImageResource(R.drawable.number1white);
+                    imageViewDrink3.setImageResource(R.drawable.number3white);
                     imageViewDrink2.startAnimation(animShake);
                     imageViewDrink1.clearAnimation();
                     imageViewDrink3.clearAnimation();
                     break;
                 case 2:
-                    imageViewDrink3.setImageResource(R.drawable.number3_pink);
-                    imageViewDrink1.setImageResource(R.drawable.number1);
-                    imageViewDrink2.setImageResource(R.drawable.number2);
+                    imageViewDrink3.setImageResource(R.drawable.number3pink);
+                    imageViewDrink1.setImageResource(R.drawable.number1white);
+                    imageViewDrink2.setImageResource(R.drawable.number2white);
                     imageViewDrink3.startAnimation(animShake);
                     imageViewDrink1.clearAnimation();
                     imageViewDrink2.clearAnimation();
                     break;
             }
+
+
         }
 
         oldDrink = drink;
@@ -1016,8 +1217,23 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
 
-    //TEST
+   /* private void checkBT(){
+        checkBTstate.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (handlerBT.getIsConnected()) {
+                   //Log.e("BT status","juhu");
+                    //Log.d("isconnected  Main","->" + handlerBT.getIsConnected());
+                    buttonHeartbeatDrillo.setBackgroundColor(Color.GREEN);
+                }else{
+                    buttonHeartbeatDrillo.setBackgroundColor(Color.RED);
+                }
+                checkBTstate.postDelayed(this, 1000);
+            }
 
+
+        }, 5000);
+    }*/
 
     private void blizeldiewinzel() {
         hBlinzeln.postDelayed(new Runnable() {
@@ -1043,7 +1259,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
     private void alarmTeam() {
-        final int delay3 = 10000;
+        final int delay3 = 15000;
 
         hAlert.postDelayed(new Runnable() {
             @Override
@@ -1051,7 +1267,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 Random rand = new Random();
                 final int alert = rand.nextInt(teamList.size());
                 toggleAlert(alert);
-
                 hAlert.postDelayed(this, delay3);
 
             }
@@ -1111,10 +1326,12 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
         // path = extStorageDirectory + File.separator + path;
         //path = extStorageDirectory + path;
+
             Log.d("path:", path);
             mediaPlayerMusic.reset();
             mediaPlayerMusic.setDataSource(path);
             mediaPlayerMusic.prepare();
+            mediaPlayerMusic.setVolume(100, 100);
             seekBarMusic.setProgress(0);
             seekBarMusic.setMax(100);
             mUpdateTimeTask.run();
@@ -1131,7 +1348,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 date = new Date();
                 s = dateFormat.format(date);
                 textViewDateTime.setText(s);
-
+                originalVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
                 hTimeDate.postDelayed(this, delay);
             }
         }, delay);
@@ -1148,6 +1365,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         hMusic = new Handler();
         hBlinzeln = new Handler();
         hAlert = new Handler();
+        checkBTstate = new Handler();
     }
 
     protected void setupDateFormat() {
@@ -1159,69 +1377,112 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     private void toggleAlert(int posList) {
 
-        if (teamList.get(posList).getAlerted()) {
-            teamList.get(posList).setAlerted(false);
-            Collections.sort(teamList, Teams.teamsComparator);
-        } else {
+        if(alertOn && !isOneAlarmed && handlerBT.getIsConnected()){
             teamList.get(posList).setAlerted(true);
-            // mp.start();
+            isOneAlarmed = true;
+            fadeOut();
+          /*  if (teamList.get(posList).getAlerted()) {
+                teamList.get(posList).setAlerted(false);
+                Collections.sort(teamList, Teams.teamsComparator);
+            } else {
+                teamList.get(posList).setAlerted(true);
+                 mp.start();
+
+            }*/
+
+//            try {
+//                Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+//                Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+//                r.play();
+//                while(r.isPlaying()){
+//
+//                }
+//                fadeIn();
+//
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+            //mp.start(); //TODO soundpool
+            soundPool.play(soundAlarm, volume ,volume,1,0,1f);
+
+
+
+            //fadeIn();
+
             Collections.sort(teamList, Teams.teamsComparator);
+            adapterTeamList.notifyDataSetChanged();
         }
 
-        adapterTeamList.notifyDataSetChanged();
     }
 
     private void getListData() {
 
         Teams team1 = new Teams();
         team1.setName("Error 404");
+        team1.setMemberOne("Iggy");
+        team1.setMemberTwo("Marc");
         team1.setDrunk(5);
+        team1.setAlerted(false);
         teamList.add(team1);
 
         Teams team2 = new Teams();
         team2.setName("Grünviehs");
+        team2.setMemberOne("Grüni");
+        team2.setMemberTwo("Robbvieh");
         team2.setDrunk(23);
+        team2.setAlerted(false);
         teamList.add(team2);
 
         Teams team3 = new Teams();
         team3.setName("Gagipenners");
+        team3.setMemberOne("Gagi");
+        team3.setMemberTwo("Achim");
         team3.setDrunk(-3);
+        team3.setAlerted(false);
+
         teamList.add(team3);
 
-        Teams team4 = new Teams();
+        /*Teams team4 = new Teams();
         team4.setName("Digge");
         team4.setDrunk(33);
+        team4.setAlerted(false);
         teamList.add(team4);
 
         Teams team5 = new Teams();
         team5.setName("Babbisch Guzel");
         team5.setDrunk(42);
+        team5.setAlerted(false);
         teamList.add(team5);
 
         Teams team6 = new Teams();
         team6.setName("Spencer Hill");
         team6.setDrunk(11);
+        team6.setAlerted(false);
         teamList.add(team6);
 
         Teams team7 = new Teams();
         team7.setName("Trump Voters");
         team7.setDrunk(88);
+        team7.setAlerted(false);
         teamList.add(team7);
 
         Teams team8 = new Teams();
         team8.setName("Rock n`Roll");
         team8.setDrunk(66);
+        team8.setAlerted(false);
         teamList.add(team8);
 
         Teams team9 = new Teams();
         team9.setName("Krobi Shinobi");
         team9.setDrunk(18);
+        team9.setAlerted(false);
         teamList.add(team9);
 
         Teams team10 = new Teams();
         team10.setName("BWLer");
+        team10.setAlerted(false);
         team10.setDrunk(0);
-        teamList.add(team10);
+        teamList.add(team10);*/
 
     }
 
@@ -1282,7 +1543,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         ContentResolver cr = this.getContentResolver();
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
-        String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
+        String sortOrder = MediaStore.Audio.Media.ARTIST_ID + " ASC";
         Cursor cur = cr.query(uri, null, selection, null, sortOrder);
 
         int count = 0;
@@ -1301,8 +1562,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
             }
         }
-        for(int i = 0; i < music.size(); i++)
-        Log.e("GetMsic() ", "Titel " + music.get(i));
+
         cur.close();
 
 
@@ -1326,7 +1586,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
-        mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -1424,15 +1684,71 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         }
     }
 
+    public void checkBT() {
+        checkBTstate.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (handlerBT.getIsConnected() == true) {
+                    //btCheckArduino.setBackgroundColor(Color.GREEN);
+                    textFett.clearAnimation();
+                    textFett.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorText));
+                } else {
+                    //btCheckArduino.setBackgroundColor(Color.RED);
+                    alarmCheffe(getApplicationContext());
+                    for(Teams team:teamList){
+                        team.setAlerted(false);
+                    }
+                    if(dialogChooseDrink.isShowing())
+                        dialogChooseDrink.dismiss();
+                    if(dialogDrinkAccepted.isShowing())
+                        dialogDrinkAccepted.dismiss();
+
+                }
+                isOneAlarmed = false;
+                adapterTeamList.notifyDataSetChanged();
+                //TODO Check Antrieb
+                checkBTstate.postDelayed(this, 1000);
+            }
+
+
+        }, 1000);
+    }
+
+
+    private Runnable checkIncomingArduino = new Runnable(){
+
+            @Override
+            public void run() {
+                if(handlerBT.getIsConnected()){
+                    empfangen();
+                    Log.e("Message received:", msg );
+
+
+                }
+                /*if(msg.contains("12 ausgeschenkt")){
+                    Toast.makeText(getApplicationContext(), "JUHU!", Toast.LENGTH_SHORT).show ();
+                }*/
+                checkIncoming.postDelayed(this, 1000);
+            }
+
+    };
+
+   public static void alarmCheffe(Context context){
+        //textFett.startAnimation(AnimationUtils.loadAnimation(context,android.R.anim.));
+        Animation animation;
+        animation = AnimationUtils.loadAnimation(context, R.anim.blink);
+        textFett.setTextColor(Color.RED);
+        textFett.startAnimation(animation);
+    }
+
+
     @Override
     protected void onPause() {
         super.onPause();
-       // saveTeams();
-        //Log.d("saveTEamsOnPause()", "saved");
-
+        //TODO Dinge ausstellen
         if(mGoogleApiClient != null && mGoogleApiClient.isConnected())
         mGoogleApiClient.disconnect();
-
+        unregisterReceiver(mReceiver);
     }
 
 
@@ -1440,8 +1756,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     @Override
     protected void onResume() {
         super.onResume();
+
         if(mGoogleApiClient != null)
         mGoogleApiClient.connect();
+        this.registerReceiver(mReceiver, filter);
+
     }
 
 
@@ -1449,11 +1768,110 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     public void onStop() {
         super.onStop();
 
+        //unregisterReceiver(mReceiver);
 
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
 
+        //this.unregisterReceiver(mReceiver);
+        // TODO
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //unregisterReceiver(mReceiver);
+    }
+
+    public final static BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+            //Device found
+            }
+            else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+            //Device is now connected
+                handlerBT.setIs_connected(true);
+            }
+            else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+            //Done searching
+            }
+            else if (BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equals(action)) {
+            //Device is about to disconnect
+                handlerBT.setIs_connected(false);
+            }
+            else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+            //Device has disconnected
+                handlerBT.setIs_connected(false);
+            }
+        }
+    };
+
+
+    private void fadeOut(){
+
+        int targetVol = 2;
+        int STEP_DOWN = 1;
+        int curVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        //int orgVol = curVol;
+        Log.e("vol", ""+curVol);
+        while(curVol > targetVol) {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, curVol - STEP_DOWN, 0);
+            //mediaPlayerMusic.setVolume(curVol - STEP_DOWN, curVol - STEP_DOWN);
+            curVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        }
+
+    }
+
+    private void fadeIn(){
+
+        int curVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        int STEP_UP = 1;
+
+        while(curVol < originalVolume){
+
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, curVol + STEP_UP,0);
+            //mediaPlayerMusic.setVolume(curVol + STEP_UP, curVol + STEP_UP);
+            curVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        }
+
+    }
+
+    public static void alarmsOff(){
+
+        for(int i = 0; i < teamList.size(); i++){
+                teamList.get(i).setAlerted(false);
+        }
+        adapterTeamList.notifyDataSetChanged();
+
+    }
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(newBase);
+        MultiDex.install(this);
+    }
 }
+
+
 
 class Mp3Filter implements FilenameFilter{
 

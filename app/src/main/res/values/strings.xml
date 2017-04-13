@@ -1,14 +1,10 @@
 <resources>
-    <string name="app_name">Vatertag2017</string>
+    <string name="appName">Vatertag 2017</string>
     <string name="f_e_t_t">F.E.T.T.</string>
     <string name="powered_by_adelheid">powered by ADELHEID</string>
-    <string name="laden">Laden</string>
-    <string name="senden">Senden...</string>
-    <string name="speichern">Speichern</string>
     <string name="starts_music">Starts Music</string>
     <string name="backwards">backwards</string>
     <string name="forward">forward</string>
-    <string name="playlist">playlist</string>
     <string name="shuffle">shuffle</string>
     <string name="google_api_key">AIzaSyAl_KtOa9JoEEYOUDXrZNvSmZRxsFNKa6w</string>
     <string name="title_activity_blauzahn">BlauzahnActivity</string>
