@@ -784,6 +784,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                     dialogChangeName.dismiss();
                                 }
                             });
+                            blizeldiewinzel();
                         }
                     });
                     buttonDeleteTeam.setOnClickListener(new View.OnClickListener() {
@@ -809,7 +810,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
                                 }
                             });
-
+                            blizeldiewinzel();
                         }
                     });
 
@@ -826,7 +827,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                             buttonOK.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {
-                                    Teams team = new Teams();
+                                    Teams team = new Teams(getApplicationContext());
                                     String tmp = editName.getText().toString();
                                     String tmp2 = editMemberOne.getText().toString();
                                     String tmp3 = editMemberTwo.getText().toString();
@@ -861,6 +862,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
                                 }
                             });
+                            blizeldiewinzel();
                         }
                     });
 
@@ -880,6 +882,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
         public static void empfangen() {
+            msg = "";
             byte[] buffer = new byte[1024]; // Puffer
             int laenge; // Anzahl empf. Bytes
 
@@ -905,6 +908,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             } catch (Exception e) {
                 Log.e(LOG_TAG_DRILLO, "Fehler beim Empfangen: " + e.toString());
             }
+
         }
 
     private void saveTeams(){
@@ -1086,9 +1090,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 imageViewDrink2.setColorFilter(Color.RED);
                 imageViewDrink3.setColorFilter(Color.RED);
                 if(amountToDrink == 2)
-                    handlerBT.sendBT("AS.1_2#");
+                    handlerBT.sendBT("AS:1_2#");
                 else
-                    handlerBT.sendBT("AS.1_4#");
+                    handlerBT.sendBT("AS:1_4#");
                 Log.e("drink 1 wird geschickt","" + amountToDrink + " cl");
                 break;
             case 2:
@@ -1133,9 +1137,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             public void onFinish() {
                 // TODO ALLE Werte erst hier setzen mit switch/case
 
-                //if(msg.contains("AS:DONE#"))
-                    doTheShit();
-                    //Toast.makeText(getApplicationContext(), "JUHU!", Toast.LENGTH_SHORT).show ();
+                //doTheShit();
+                //if(msg.contains("DONE#"))
+                //Toast.makeText(getApplicationContext(), "JUHU!", Toast.LENGTH_SHORT).show ();
 
              /*   switch (tmp){
                     case 1:
@@ -1161,9 +1165,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     Toast.makeText(getApplicationContext(), "JUHU er sendet!", Toast.LENGTH_SHORT).show ();
                 }*/
                //fadeIn();
-                //dialogChooseDrink.dismiss();
+                dialogChooseDrink.dismiss();
                 adapterTeamList.notifyDataSetChanged();
-                msg = "";
+
                 //tmp = false;
 
             }
@@ -1259,7 +1263,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
     private void alarmTeam() {
-        final int delay3 = 15000;
+        final int delay3 = 60000;
 
         hAlert.postDelayed(new Runnable() {
             @Override
@@ -1380,6 +1384,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         if(alertOn && !isOneAlarmed && handlerBT.getIsConnected()){
             teamList.get(posList).setAlerted(true);
             isOneAlarmed = true;
+            //handlerBT.sendBT("ALARM#");
             fadeOut();
           /*  if (teamList.get(posList).getAlerted()) {
                 teamList.get(posList).setAlerted(false);
@@ -1417,7 +1422,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     private void getListData() {
 
-        Teams team1 = new Teams();
+        Teams team1 = new Teams(getApplicationContext());
         team1.setName("Error 404");
         team1.setMemberOne("Iggy");
         team1.setMemberTwo("Marc");
@@ -1425,7 +1430,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         team1.setAlerted(false);
         teamList.add(team1);
 
-        Teams team2 = new Teams();
+        Teams team2 = new Teams(getApplicationContext());
         team2.setName("Grünviehs");
         team2.setMemberOne("Grüni");
         team2.setMemberTwo("Robbvieh");
@@ -1433,7 +1438,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         team2.setAlerted(false);
         teamList.add(team2);
 
-        Teams team3 = new Teams();
+        Teams team3 = new Teams(getApplicationContext());
         team3.setName("Gagipenners");
         team3.setMemberOne("Gagi");
         team3.setMemberTwo("Achim");
@@ -1702,9 +1707,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         dialogChooseDrink.dismiss();
                     if(dialogDrinkAccepted.isShowing())
                         dialogDrinkAccepted.dismiss();
-
+                    isOneAlarmed = false;
                 }
-                isOneAlarmed = false;
                 adapterTeamList.notifyDataSetChanged();
                 //TODO Check Antrieb
                 checkBTstate.postDelayed(this, 1000);
@@ -1728,7 +1732,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 /*if(msg.contains("12 ausgeschenkt")){
                     Toast.makeText(getApplicationContext(), "JUHU!", Toast.LENGTH_SHORT).show ();
                 }*/
-                checkIncoming.postDelayed(this, 1000);
+                checkIncoming.postDelayed(this, 100);
             }
 
     };

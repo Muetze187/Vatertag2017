@@ -154,7 +154,7 @@ public class BlauzahnActivity extends AppCompatActivity {
         btDrink1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                handlerBTBlau.sendBT("12");
+                handlerBTBlau.sendBT("AS:1_2#");
 
 
 
@@ -164,7 +164,7 @@ public class BlauzahnActivity extends AppCompatActivity {
         btDrink2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                handlerBTBlau.sendBT("LED:");
+                handlerBTBlau.sendBT("AS:2_2#");
 
             }
         });
@@ -172,7 +172,7 @@ public class BlauzahnActivity extends AppCompatActivity {
         btDrink3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                handlerBTBlau.sendBT("HB:");
+                handlerBTBlau.sendBT("AS:3_2#");
 
             }
         });

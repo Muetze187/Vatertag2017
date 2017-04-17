@@ -8,6 +8,7 @@ import android.media.Image;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -33,13 +34,14 @@ public class Teams{
     int progressStrack;
 
 
-    public Teams(){
-        animation = new AlphaAnimation(1, 0);
+    public Teams(Context context){
+        animation = AnimationUtils.loadAnimation(context, R.anim.blink);
+        /*animation = new AlphaAnimation(1, 0);
         animation.setDuration(1000);
         animation.setInterpolator(new LinearInterpolator());
         animation.setRepeatCount(Animation.INFINITE);
-        animation.setRepeatMode(Animation.REVERSE);
-
+        animation.setRepeatMode(Animation.RESTART);
+*/
         strackLevel = "Müdigkeit: ";
         vielfalt = "Verteilung: ";
         isAlerted = false;
