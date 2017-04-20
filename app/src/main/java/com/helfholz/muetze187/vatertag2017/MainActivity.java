@@ -5,27 +5,23 @@ import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
-import android.net.Uri;
 import android.os.CountDownTimer;
+import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -48,7 +44,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SeekBar;
-import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -98,14 +93,21 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     static TextView textFett;
     TextView adelheid;
     static ListView listViewTeams;
+    ListView listViewMusic;
+    private ArrayList<String> item = null;
+    private ArrayList<String> path = null;
+    ArrayAdapter<String> fileList = null;
+    String fileName = "";
     TextView textViewAmountDrink;
     TextView textViewGlueckwunsch;
     TextView textViewNameChoose;
     TextView distanceMarkers;
     EditText editTextMAC;
     TextView textViewReceive;
+    TextView textViewSong;
     final String DRINKAMOUNT = "Zu trinkende Menge: ";
     int currentSong;
+    int currentPosition;
     static CustomListAdapter adapterTeamList;
     ArrayAdapter<String> adapterSpinner;
     static ArrayList<Teams> teamList = new ArrayList<Teams>();
@@ -113,7 +115,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     ArrayList<String> music = new ArrayList<String>();
     ArrayList<String> musicTrimmed = new ArrayList<String>();
 
-    ImageButton play, prev, forw, shuffle;
+    ImageButton play, prev, forw, shuffle, repeat;
     static SeekBar seekBarMusic;
     final int delay = 1000;
     int delay2 = 2000;
@@ -125,7 +127,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     Handler checkIncoming;
     static boolean isStarted;
     static boolean fromIntent;
-    boolean isShuffle;
+    boolean isShuffle, isRepeat;
     Date date;
     SimpleDateFormat dateFormat;
     String s;
@@ -147,7 +149,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     Gson gson;
     String jsonTeams = "";
     boolean hadChanceDrink1 = false, isHadChanceDrink2 = false, isHadChanceDrink3 = false;
-    Spinner spinner;
+    //Spinner spinner;
     Dialog dialogChangeName;
     Dialog dialogNewTeam;
     Dialog dialogTeamChoice;
@@ -185,6 +187,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     int soundAlarm;
     int volume;
     int position2;
+    private String root = Environment.getExternalStorageDirectory().toString()+"/Music/" ;
+
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -199,7 +204,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 for (int i = 0; i < music.size(); i++) {
                     String tmp = music.get(i).toString();
                     if (tmp.contains(name)) {
-                        spinner.setSelection(i);
+                        //spinner.setSelection(i);
                         currentSong = i;
                     }
                 }
@@ -265,32 +270,38 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         textFett = (TextView) findViewById(R.id.textViewFett);
         distanceMarkers = (TextView) findViewById(R.id.textViewDistance);
 
+        textViewSong = (TextView) findViewById(R.id.textViewSong);
+        textViewSong.setText("no song selected");
+
         adelheid = (TextView) findViewById(R.id.textView2);
         play = (ImageButton) findViewById(R.id.play);
         prev = (ImageButton) findViewById(R.id.prev);
         forw = (ImageButton) findViewById(R.id.next);
         shuffle = (ImageButton) findViewById(R.id.shuffle);
+        repeat = (ImageButton) findViewById(R.id.repeat);
         listViewTeams = (ListView) findViewById(R.id.listViewTeams);
+        listViewMusic = (ListView) findViewById(R.id.listViewMusic);
         isStarted = false;
         fromIntent = false;
         isShuffle = false;
+        isRepeat = false;
         getListData();
         animShake = AnimationUtils.loadAnimation(MainActivity.this, R.anim.shake);
 
-        getMusic();
-        for (String a : music) {
-            musicTrimmed.add(a.substring(25));
-        }
+        //getMusic();
+        //for (String a : music) {
+         //   musicTrimmed.add(a.substring(25));
+        //}
 
 
         //TESTS
-        spinner = (Spinner) findViewById(R.id.spinner);
+        //spinner = (Spinner) findViewById(R.id.spinner);
         adapterSpinner = new ArrayAdapter<String>(this,
                 R.layout.spinner_item, musicTrimmed);
         adapterSpinner.setDropDownViewResource(R.layout.spinner_item);
-        spinner.setAdapter(adapterSpinner);
+        //spinner.setAdapter(adapterSpinner);
         //helps but depricated
-        spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorPink), PorterDuff.Mode.SRC_ATOP);
+        //spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorPink), PorterDuff.Mode.SRC_ATOP);
         //Dialogs
         dialogChangeName = new Dialog(MainActivity.this);
         dialogChangeName.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -366,8 +377,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
 
         listViewTeams.setAdapter(adapterTeamList);
-        Log.d("liste1", music.get(0).toString());
-        Log.d("listelast", music.get(music.size() - 1).toString());
+        //Log.d("liste1", music.get(0).toString());
+        //Log.d("listelast", music.get(music.size() - 1).toString());
 
         //init Handlers
         initHandlers();
@@ -383,6 +394,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
 
         mediaPlayerMusic = new MediaPlayer();
+        //mediaPlayerMusic.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
         mediaPlayerMusic.setOnCompletionListener(this);
 
         mp = MediaPlayer.create(this, R.raw.foghorndanielsimon);
@@ -403,6 +415,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
                 Intent intent = new Intent(MainActivity.this, BlauzahnActivity.class);
                 startActivity(intent);
+
 
             }
         });
@@ -515,7 +528,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         });
         //TESTS
 
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        /*spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 Log.e("IM HERE! FOR NO REASON", "");
@@ -542,20 +555,26 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
             }
         });
-
+*/
 
         //OnClick-Listeners
 
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (isStarted) {
+
+                if(!isStarted){
+
+                }
+                else if (isStarted) {
                     if (mediaPlayerMusic.isPlaying()) {
                         mediaPlayerMusic.pause();
+                        //currentPosition = mediaPlayerMusic.getCurrentPosition();
                         play.setBackgroundResource(R.drawable.playcircularbutton);
-
-                    } else {
+                    }
+                     else{
                         mediaPlayerMusic.start();
+                        //mediaPlayerMusic.seekTo(currentPosition);
                         play.setBackgroundResource(R.drawable.pausecircularbutton);
                     }
                     fromIntent = false;
@@ -564,7 +583,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         playSong(music.get(currentSong));
                         isStarted = true;
                         fromIntent = false;
-                        spinner.setSelection(currentSong);
+                        //spinner.setSelection(currentSong);
                         play.setBackgroundResource(R.drawable.pausecircularbutton);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -577,15 +596,28 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         prev.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 if (!isStarted) {
 
+                }else if (isShuffle) {
+                    // shuffle is on - play a random song
+                    Random rand = new Random();
+                    currentSong = rand.nextInt((music.size() - 1) - 0 + 1) + 0;
+                    try {
+                        playSong(music.get(currentSong));
+                        textViewSong.setText(musicTrimmed.get(currentSong));
+                        //spinner.setSelection(currentSong);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     if (currentSong == 0) {
                         mediaPlayerMusic.reset();
                         currentSong = music.size() - 1;
                         try {
                             playSong(music.get(currentSong));
-                            spinner.setSelection(currentSong);
+                            textViewSong.setText(musicTrimmed.get(currentSong));
+                            //spinner.setSelection(currentSong);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -593,7 +625,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         currentSong--;
                         try {
                             playSong(music.get(currentSong));
-                            spinner.setSelection(currentSong);
+                            textViewSong.setText(musicTrimmed.get(currentSong));
+                            //spinner.setSelection(currentSong);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -609,15 +642,29 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         forw.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 if (!isStarted) {
 
+                }
+                else if (isShuffle) {
+                    // shuffle is on - play a random song
+                    Random rand = new Random();
+                    currentSong = rand.nextInt((music.size() - 1) - 0 + 1) + 0;
+                    try {
+                        playSong(music.get(currentSong));
+                        //spinner.setSelection(currentSong);
+                        textViewSong.setText(musicTrimmed.get(currentSong));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     if (currentSong < (music.size() - 1)) {
                         mediaPlayerMusic.reset();
                         currentSong++;
                         try {
                             playSong(music.get(currentSong));
-                            spinner.setSelection(currentSong);
+                            textViewSong.setText(musicTrimmed.get(currentSong));
+                            //spinner.setSelection(currentSong);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -625,7 +672,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         currentSong = 0;
                         try {
                             playSong(music.get(currentSong));
-                            spinner.setSelection(currentSong);
+                            textViewSong.setText(musicTrimmed.get(currentSong));
+                            //spinner.setSelection(currentSong);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -642,21 +690,75 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             public void onClick(View view) {
                 //Intent intent = new Intent(getApplicationContext(), FileExplorer.class);
                 //startActivity(intent);
-                fadeIn();
-               /* if(isShuffle){
+                //fadeIn();
+               if(isShuffle){
                     isShuffle = false;
-                    shuffle.setBackgroundResource(R.drawable.ic_shuffle);
+                    shuffle.setBackgroundResource(R.drawable.shuffle_big);
+                    Collections.sort(music);
                 }
                 else{
                     isShuffle = true;
-                    shuffle.setBackgroundResource(R.drawable.ic_shuffle_pressed);
-
+                    shuffle.setBackgroundResource(R.drawable.shufflebig_pushed_blue);
+                    Collections.shuffle(music);
                 }
 
-                Log.d("HELLO", String.valueOf(isShuffle));*/
+                Log.d("HELLO", String.valueOf(isShuffle));
             }
         });
 
+        repeat.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if(isRepeat){
+                    isRepeat = false;
+                    repeat.setBackgroundResource(R.drawable.repeat);
+                }else{
+                    isRepeat = true;
+                    repeat.setBackgroundResource(R.drawable.repeat_pushed_blue);
+                }
+            }
+        });
+
+        listViewMusic.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int i, long id) {
+                File file = new File(path.get(i));
+
+
+                if (file.isDirectory()) {
+                    if (file.canRead())
+                        getDir(path.get(i));
+                }else{
+
+                    fileName = file.getName();
+                    isStarted = true;
+                    play.setBackgroundResource(R.drawable.pausecircularbutton);
+                    for (int j = 0; j < music.size(); j++) {
+                        String tmp = music.get(j).toString();
+                        if (tmp.contains(fileName)) {
+                            //spinner.setSelection(j);
+                            currentSong = j;
+                        }
+                    }
+                    try {
+                        //playSong(file.getAbsolutePath());
+                        playSong(file.getAbsolutePath());
+                        textViewSong.setText(musicTrimmed.get(currentSong));
+
+
+                        //mainAtivity.playSong(file.getName() +".mp3");
+                        //mainActivity.isStarted = true;
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    // songIndex = i;
+                    //Log.d("currentSong", "depp " + songIndex);
+                }
+
+            }
+        });
 
         listViewTeams.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -878,7 +980,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         showTimeAndDate();
         alarmTeam();
         //checkBT();
-
+        getDir(root);
     }
 
         public static void empfangen() {
@@ -1287,16 +1389,25 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             currentSong = rand.nextInt((music.size() - 1) - 0 + 1) + 0;
             try {
                 playSong(music.get(currentSong));
-                spinner.setSelection(currentSong);
+                textViewSong.setText(musicTrimmed.get(currentSong));
+                //spinner.setSelection(currentSong);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } else {
+        } else if(isRepeat){
+            try {
+                playSong(music.get(currentSong));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        else{
             // no repeat or shuffle ON - play next song
             if (currentSong < (music.size() - 1)) {
                 try {
                     playSong(music.get(currentSong + 1));
-                    spinner.setSelection(currentSong);
+                    textViewSong.setText(musicTrimmed.get(currentSong + 1));
+                    //spinner.setSelection(currentSong + 1);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -1305,7 +1416,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 // play first song
                 try {
                     playSong(music.get(0));
-                    spinner.setSelection(currentSong);
+                    textViewSong.setText(musicTrimmed.get(0));
+     //               spinner.setSelection(0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -1349,6 +1461,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         hTimeDate.postDelayed(new Runnable() {
             @Override
             public void run() {
+                for(int k = 0; k < music.size(); k++)
+                    Log.e("music unne","" + music.get(k));
                 date = new Date();
                 s = dateFormat.format(date);
                 textViewDateTime.setText(s);
@@ -1374,7 +1488,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     protected void setupDateFormat() {
         TimeZone tz = TimeZone.getTimeZone("Europe/Berlin");
-        dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+        dateFormat = new SimpleDateFormat("dd.MM.yyyy\nHH:mm:ss");
         dateFormat.setTimeZone(tz);
     }
 
@@ -1536,15 +1650,15 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
 
-    public void getMusic() { //String[]
+    /*public void getMusic() { //String[]
         //FOR ACTUAL DEVICE
-    /*    String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension("mp3");
+    *//*    String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension("mp3");
         String selectionMimeType = MediaStore.Files.FileColumns.MIME_TYPE + "=?";
         String[] selectionArgsMp3 = new String[]{ mimeType};
         final Cursor mCursor = getContentResolver().query(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 new String[] {String.valueOf(MediaStore.Audio.Media.DISPLAY_NAME)}, selectionMimeType , selectionArgsMp3,
-                MediaStore.Audio.Media._ID);*/
+                MediaStore.Audio.Media._ID);*//*
         ContentResolver cr = this.getContentResolver();
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
@@ -1558,8 +1672,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
             if (count > 0) {
                 while (cur.moveToNext()) {
-                    String data = cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA));
-                    music.add(data);
+                        String data = cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA));
+                        music.add(data);
+
+
                     // Add code to get more column here
 
                     // Save to your list here
@@ -1569,10 +1685,12 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         }
 
         cur.close();
+        for(int i = 0; i < music.size(); i++)
+            Log.e("music unne","" + music.get(i));
 
 
 
-     /*   int count = mCursor.getCount();
+     *//*   int count = mCursor.getCount();
 
         String[] songs = new String[count];
         int i = 0;
@@ -1583,11 +1701,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             } while (mCursor.moveToNext());
         }
 
-        mCursor.close();*/
+        mCursor.close();*//*
 
         // return songs;
     }
-
+*/
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
@@ -1873,6 +1991,48 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         super.attachBaseContext(newBase);
         MultiDex.install(this);
     }
+
+    private void getDir(String dirPath) {
+        //myPath.setText("Location: " + dirPath);
+        item = new ArrayList<String>();
+        path = new ArrayList<String>();
+
+
+        File f = new File(dirPath);
+        File[] files = f.listFiles();
+
+
+        if(!dirPath.equals(root)) {
+            item.add("zurück");
+            path.add(root);
+            music = new ArrayList<String>();
+            musicTrimmed = new ArrayList<String>();
+        }
+
+        for(int i=0; i < files.length; i++)
+        {
+            File file = files[i];
+            path.add(file.getPath());
+            if(file.isDirectory())
+                item.add(file.getName() + "/");
+            else{
+                item.add(file.getName());
+                music.add(file.getAbsolutePath());
+            }
+
+
+        }
+
+        for (String a : music) {
+           musicTrimmed.add(a.substring(25));
+        }
+
+        fileList = new ArrayAdapter<String>(this, R.layout.spinner_item, item);
+        listViewMusic.setAdapter(fileList);
+
+
+    }
+
 }
 
 

@@ -132,7 +132,7 @@ public class Mp3Activity extends Activity {
 
                 try {
                         mainActivity.playSong(file.getAbsolutePath());
-                        //mainActivity.playSong(file.getName() +".mp3");
+                        //mainAtivity.playSong(file.getName() +".mp3");
                         //mainActivity.isStarted = true;
                     fileName = file.getName();
                     } catch (IOException e) {
@@ -164,6 +164,7 @@ public class Mp3Activity extends Activity {
         File f = new File(dirPath);
         File[] files = f.listFiles();
 
+
         if(!dirPath.equals(root)) {
             item.add("zurück");
             path.add(root);
@@ -180,6 +181,7 @@ public class Mp3Activity extends Activity {
         }
         fileList = new ArrayAdapter<String>(this, R.layout.spinner_item, item);
         listViewPlaylist.setAdapter(fileList);
+
 
     }
 

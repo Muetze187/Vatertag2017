@@ -38,7 +38,7 @@
         android:layout_height="wrap_content"
         android:background="@color/colorText"
         android:layout_toEndOf="@id/textViewFett"
-        android:layout_marginStart="200dp"/>
+        android:layout_marginStart="180dp"/>
 
     <ImageButton
         android:id="@+id/prev"
@@ -78,20 +78,44 @@
         android:layout_alignStart="@+id/prev" />
 
     <ImageButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
         android:id="@+id/shuffle"
-        android:background="@drawable/ic_shuffle"
+        android:background="@drawable/shuffle_big"
         android:contentDescription="@string/shuffle"
-        android:layout_alignBottom="@+id/seekBarMusic"
+        android:layout_alignTop="@+id/next"
+        android:layout_marginStart="20dp"
         android:layout_toEndOf="@+id/seekBarMusic" />
 
-    <Spinner
+    <ImageButton
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:id="@+id/repeat"
+        android:background="@drawable/repeat"
+        android:layout_below="@id/shuffle"
+        android:layout_alignLeft="@id/shuffle"
+        android:layout_toRightOf="@id/next"/>
+
+    <!--<Spinner
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:id="@+id/spinner"
-        android:layout_alignTop="@+id/shuffle"
-        android:layout_toRightOf="@+id/shuffle"/>
+        android:layout_below="@+id/seekBarMusic"
+        android:layout_toRightOf="@+id/dividerMainLeft"
+        android:layout_alignRight="@+id/dividerMainInvisible"/>
+-->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:id="@+id/textViewSong"
+        android:textColor="@color/colorPink"
+        android:textSize="16sp"
+        android:padding="5dp"
+        android:layout_below="@+id/seekBarMusic"
+        android:layout_toRightOf="@+id/dividerMainLeft"
+        android:layout_alignLeft="@+id/seekBarMusic"
+        android:layout_alignRight="@+id/dividerMainInvisible"
+        />
 
     <TextView
         android:layout_width="wrap_content"
@@ -133,8 +157,20 @@
         android:layout_width="1dp"
         android:layout_height="wrap_content"
         android:id="@+id/dividerMainInvisible"
-        android:layout_toLeftOf="@+id/textViewDateTime"
+        android:background="@color/colorText"
+        android:layout_marginStart="920dp"
         />
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/listViewMusic"
+        android:layout_toRightOf="@+id/dividerMainInvisible"
+        android:layout_below="@+id/dividerMainHorizontal"
+        />
+
+
+
     <View
         android:layout_width="wrap_content"
         android:layout_height="1dp"
@@ -164,6 +200,14 @@
            android:layout_below="@+id/textViewDistance"
            android:layout_alignStart="@+id/textViewDistance" />
 
+    <android.support.v7.widget.SearchView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:id="@+id/search"
+        android:layout_toRightOf="@+id/dividerMainInvisible"
+        android:layout_above="@+id/dividerMainHorizontal"
+        />
 
 
 
