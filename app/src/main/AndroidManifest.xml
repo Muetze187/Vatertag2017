@@ -22,7 +22,10 @@
         android:label="@string/appName"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity"
+            android:windowSoftInputMode="stateHidden"
+            >
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -45,8 +48,6 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_api_key" />
 
-        <activity android:name=".Mp3Activity" />
-        <activity android:name=".FileExplorer" />
         <activity
             android:name=".BlauzahnActivity"
             android:label="@string/title_activity_blauzahn"

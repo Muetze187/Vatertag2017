@@ -200,11 +200,20 @@
            android:layout_below="@+id/textViewDistance"
            android:layout_alignStart="@+id/textViewDistance" />
 
-    <android.support.v7.widget.SearchView
+   <!-- <android.support.v7.widget.SearchView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:clickable="true"
+        android:queryHint="search music"
         android:id="@+id/search"
+        android:layout_toRightOf="@+id/dividerMainInvisible"
+        android:layout_above="@+id/dividerMainHorizontal"
+        />-->
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/search"
+        android:hint="search music here"
         android:layout_toRightOf="@+id/dividerMainInvisible"
         android:layout_above="@+id/dividerMainHorizontal"
         />

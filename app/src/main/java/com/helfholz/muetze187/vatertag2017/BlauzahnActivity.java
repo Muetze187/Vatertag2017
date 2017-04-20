@@ -68,7 +68,7 @@ public class BlauzahnActivity extends AppCompatActivity {
     static IntentFilter filterBlauZahn;
 
 
-    //TODO Optionsmenu
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -268,7 +268,7 @@ public class BlauzahnActivity extends AppCompatActivity {
 
         btArrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         listViewDevices.setAdapter(btArrayAdapter);
-        //checkBT(); TODO einschalten evtl
+
 
     }
 
@@ -354,41 +354,6 @@ public class BlauzahnActivity extends AppCompatActivity {
 
 
     }
-
-    /*private Runnable checkBT = new Runnable() {
-        @Override
-        public void run() {
-            if(handlerBTBlau.getIsConnected()){
-                //sendBT("x:");
-                empfangen();
-                Log.e("#ALIVE:", msg);
-                if(msg.contains("ALIVE")){
-                    Toast.makeText(getApplicationContext(), "JUHU!", Toast.LENGTH_SHORT).show ();
-                }
-            }
-
-
-            checkBTstate.postDelayed(this,1000);
-        }
-    };*/
-
-   /*public void checkBT(){
-        checkBTstate.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if(handlerBTBlau.getIsConnected() == true){
-                    btCheckArduino.setBackgroundColor(Color.GREEN);
-                }else{
-                    btCheckArduino.setBackgroundColor(Color.RED);
-                    //alarmCheffe(getApplicationContext());
-                }
-                //TODO Check Antrieb
-                checkBTstate.postDelayed(this, 1000);
-            }
-
-
-        }, 1000);
-    }*/
 
     private void saveTeams(){
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(BlauzahnActivity.this);

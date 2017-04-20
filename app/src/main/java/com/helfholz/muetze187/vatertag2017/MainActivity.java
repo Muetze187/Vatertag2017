@@ -2,6 +2,7 @@ package com.helfholz.muetze187.vatertag2017;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -28,6 +29,8 @@ import android.support.annotation.Nullable;
 import android.support.multidex.MultiDex;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -97,12 +100,13 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     private ArrayList<String> item = null;
     private ArrayList<String> path = null;
     ArrayAdapter<String> fileList = null;
-    String fileName = "";
+    ArrayAdapter<String> musicList = null;
+     String fileName = "";
     TextView textViewAmountDrink;
     TextView textViewGlueckwunsch;
     TextView textViewNameChoose;
     TextView distanceMarkers;
-    EditText editTextMAC;
+    EditText editTextSearch;
     TextView textViewReceive;
     TextView textViewSong;
     final String DRINKAMOUNT = "Zu trinkende Menge: ";
@@ -188,62 +192,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     int volume;
     int position2;
     private String root = Environment.getExternalStorageDirectory().toString()+"/Music/" ;
-
-
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        String name = null;
-        if (resultCode == 200) {
-
-            name = data.getExtras().getString("filename");
-            play.setBackgroundResource(R.drawable.pausecircularbutton);
-            if (!name.isEmpty()) {
-                int spinnerPos = adapterSpinner.getPosition("/TD/" + name);
-                for (int i = 0; i < music.size(); i++) {
-                    String tmp = music.get(i).toString();
-                    if (tmp.contains(name)) {
-                        //spinner.setSelection(i);
-                        currentSong = i;
-                    }
-                }
-
-                isStarted = true;
-                fromIntent = true;
-            }
-
-        }
-        Log.d("name ist", name);
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-
-        switch (event.getAction()) {
-
-            case MotionEvent.ACTION_DOWN:
-                x1 = event.getX();
-                break;
-            case MotionEvent.ACTION_UP:
-                x2 = event.getX();
-                float deltaX = x2 - x1;
-                if (Math.abs(deltaX) > MIN_DISTANCE) {
-                    //Toast.makeText(this, "left2right swipe", Toast.LENGTH_SHORT).show ();
-                    Intent i = new Intent(MainActivity.this, Mp3Activity.class);
-
-
-                    startActivityForResult(i, 200);
-                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-                } else {
-                    // consider as something else - a screen tap for example
-                }
-                break;
-
-        }
-        return super.onTouchEvent(event);
-    }
-
+    int zaehler = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -292,7 +241,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         //for (String a : music) {
          //   musicTrimmed.add(a.substring(25));
         //}
-
+        editTextSearch = (EditText) findViewById(R.id.search);
 
         //TESTS
         //spinner = (Spinner) findViewById(R.id.spinner);
@@ -383,11 +332,12 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         //init Handlers
         initHandlers();
 
+
         handlerBT = BluetoothHandler.getHandlerBT(this);
         checkBTstate = new Handler();
         checkIncoming = new Handler();
         checkBT();
-        checkIncomingArduino.run();
+        //checkIncomingArduino.run();
         if (handlerBT.getBtAdapter().isEnabled()) {
             handlerBT.setIsBtOn(true);
         }
@@ -527,6 +477,25 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             }
         });
         //TESTS
+
+        editTextSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                musicList = new ArrayAdapter<String>(getApplicationContext(), R.layout.spinner_item, music );
+                listViewMusic.setAdapter(musicList);
+                MainActivity.this.musicList.getFilter().filter(s);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
 
         /*spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -688,9 +657,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         shuffle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //Intent intent = new Intent(getApplicationContext(), FileExplorer.class);
-                //startActivity(intent);
-                //fadeIn();
+
                if(isShuffle){
                     isShuffle = false;
                     shuffle.setBackgroundResource(R.drawable.shuffle_big);
@@ -1049,10 +1016,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 //        Log.e("Name des Members", textViewNameChoose.getText().toString());
 //        Log.e("MembersUno","" +teamList.get(position2).getMemberOne());
 //        Log.e("MembersDuo",""+teamList.get(position2).getMemberTwo());
-        if(textViewNameChoose.getText().toString().contains(teamList.get(position2).getMemberOne().toString())){
-            textViewNameChoose.setText(teamList.get(position2).getMemberTwo().toString() + " @ " + teamList.get(position2).getName().toString());
-        }else{
+
+        if(zaehler == 0){
             textViewNameChoose.setText(teamList.get(position2).getMemberOne().toString() + " @ " + teamList.get(position2).getName().toString());
+        }else{
+            textViewNameChoose.setText(teamList.get(position2).getMemberTwo().toString() + " @ " + teamList.get(position2).getName().toString());
         }
 
         textViewAmountDrink.setText(DRINKAMOUNT + amountToDrink + " cl");
@@ -1142,6 +1110,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             }
         });
 
+
     }
 
 
@@ -1183,7 +1152,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         teamList.get(pos).increaseStrackLevel(10);
         teamList.get(pos).setDrunk(teamList.get(pos).getDrunkPlain());
         teamList.get(pos).setAlerted(false);
-        isOneAlarmed = false;
+
 
         switch (winnerDrink){
             case 1:
@@ -1220,61 +1189,42 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 Log.e("drink 3 wird geschickt","" + amountToDrink + " cl");
                 break;
         }
+        //TODO string richtig empfanen
+        final ProgressDialog ringProgressDialog = ProgressDialog.show(MainActivity.this, "Please wait ...", msg, true);
 
-        new CountDownTimer(5000, 1000) {
-            int tmp = 0;
+        ringProgressDialog.setCancelable(true);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                empfangen();
+                while(!msg.equals("AS:DONE#")){
+
+                }
+                ringProgressDialog.dismiss();
+
+            }
+        }).start();
+
+        if(zaehler == 0){
+            zaehler++;
+            doTheShit();
+        }else{
+            dialogChooseDrink.dismiss();
+            zaehler = 0;
+            isOneAlarmed = false;
+            adapterTeamList.notifyDataSetChanged();
+        }
+        /*new CountDownTimer(5000, 1000) {
+
             @Override
             public void onTick(long millisUntilFinished) {
-
-               /* if(msg.contains("12 ausgeschenkt")){
-                    tmp = 1;
-                }else if(msg.contains("22 ausgeschenkt")){
-                    tmp = 2;
-                }else if(msg.contains("22 ausgeschenkt")){
-                    tmp = 3;
-                }*/
             }
 
             @Override
             public void onFinish() {
-                // TODO ALLE Werte erst hier setzen mit switch/case
 
-                //doTheShit();
-                //if(msg.contains("DONE#"))
-                //Toast.makeText(getApplicationContext(), "JUHU!", Toast.LENGTH_SHORT).show ();
-
-             /*   switch (tmp){
-                    case 1:
-                        teamList.get(teamPos).increaseStrackLevel(10);
-                        teamList.get(teamPos).setDrunk(teamList.get(teamPos).getDrunkPlain());
-                        teamList.get(teamPos).setAlerted(false);
-                        teamList.get(teamPos).setCounterOne(teamList.get(teamPos).getCounterOne() + 1);
-                        break;
-                    case 2:
-                        teamList.get(teamPos).increaseStrackLevel(10);
-                        teamList.get(teamPos).setDrunk(teamList.get(teamPos).getDrunkPlain());
-                        teamList.get(teamPos).setAlerted(false);
-                        teamList.get(teamPos).setCounterTwo(teamList.get(teamPos).getCounterTwo() + 1);
-                        break;
-                    case 3:
-                        teamList.get(teamPos).increaseStrackLevel(10);
-                        teamList.get(teamPos).setDrunk(teamList.get(teamPos).getDrunkPlain());
-                        teamList.get(teamPos).setAlerted(false);
-                        teamList.get(teamPos).setCounterThree(teamList.get(teamPos).getCounterTwo() + 1);
-                }*/
-
-               /* if(tmp){
-                    Toast.makeText(getApplicationContext(), "JUHU er sendet!", Toast.LENGTH_SHORT).show ();
-                }*/
-               //fadeIn();
-                dialogChooseDrink.dismiss();
-                adapterTeamList.notifyDataSetChanged();
-
-                //tmp = false;
-
-            }
         }.start();
-
+*/
     }
 
     private void getRandomDrink() {
@@ -1365,7 +1315,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
     private void alarmTeam() {
-        final int delay3 = 60000;
+        final int delay3 = 12000;
 
         hAlert.postDelayed(new Runnable() {
             @Override
@@ -1461,8 +1411,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         hTimeDate.postDelayed(new Runnable() {
             @Override
             public void run() {
-                for(int k = 0; k < music.size(); k++)
-                    Log.e("music unne","" + music.get(k));
+                    Log.e("msg unne",msg);
                 date = new Date();
                 s = dateFormat.format(date);
                 textViewDateTime.setText(s);
@@ -1837,7 +1786,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
 
-    private Runnable checkIncomingArduino = new Runnable(){
+    /*private Runnable checkIncomingArduino = new Runnable(){
 
             @Override
             public void run() {
@@ -1847,13 +1796,13 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
 
                 }
-                /*if(msg.contains("12 ausgeschenkt")){
+                *//*if(msg.contains("12 ausgeschenkt")){
                     Toast.makeText(getApplicationContext(), "JUHU!", Toast.LENGTH_SHORT).show ();
-                }*/
+                }*//*
                 checkIncoming.postDelayed(this, 100);
             }
 
-    };
+    };*/
 
    public static void alarmCheffe(Context context){
         //textFett.startAnimation(AnimationUtils.loadAnimation(context,android.R.anim.));
@@ -2037,10 +1986,3 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
 
 
-class Mp3Filter implements FilenameFilter{
-
-    @Override
-    public boolean accept(File file, String s) {
-        return (s.endsWith(".mp3"));
-    }
-}

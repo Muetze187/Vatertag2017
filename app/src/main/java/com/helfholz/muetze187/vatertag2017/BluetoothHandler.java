@@ -31,7 +31,7 @@ import static com.helfholz.muetze187.vatertag2017.MainActivity.mReceiver;
 /**
  * Created by Muetze187 on 20.11.2016.
  */
-//TODO Wenn Dongle entfernt wird, keine Reaktion System. Immer noch connected
+
 public class BluetoothHandler extends Application{
     private UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private BluetoothAdapter btAdapter = null;
@@ -130,7 +130,7 @@ public class BluetoothHandler extends Application{
     public String getMac_adresse(){
         return mac_adresse;
     }
-    //TODO
+
 
     public synchronized void connectBT(String adress) {
         if (getIsBtOn()) {
@@ -155,7 +155,6 @@ public class BluetoothHandler extends Application{
                         }
                     }).start();
 
-                    //textViewinfo.setText("Socket verbunden"); TODO evtl auslagern in Klasse und nebenläufig
 
                     registerReceiver(mReceiver, filter);
                     registerReceiver(mReceiverBlauZahn, filterBlauZahn);
@@ -181,7 +180,7 @@ public class BluetoothHandler extends Application{
     }
 
     public synchronized void disconnectBT(){
-        //TODO
+
         if(getIsConnected()){
            // try {
             if(stream_in != null){
