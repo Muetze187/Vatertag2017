@@ -6,12 +6,14 @@ import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
@@ -19,11 +21,13 @@ import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
+import android.net.Uri;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.multidex.MultiDex;
@@ -38,6 +42,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -96,7 +101,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     static TextView textFett;
     TextView adelheid;
     static ListView listViewTeams;
-    ListView listViewMusic;
+    ListView listViewMusic, listViewSearch;
     private ArrayList<String> item = null;
     private ArrayList<String> path = null;
     ArrayAdapter<String> fileList = null;
@@ -118,6 +123,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     ArrayList<String> music = new ArrayList<String>();
     ArrayList<String> musicTrimmed = new ArrayList<String>();
+    ArrayList<String> musicTrimmedSearch = new ArrayList<String>();
+    ArrayList<String> musicTest = new ArrayList<String>();
 
     ImageButton play, prev, forw, shuffle, repeat;
     static SeekBar seekBarMusic;
@@ -195,6 +202,18 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     int zaehler = 0;
 
     @Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+
+        if(listViewMusic.getVisibility() == View.INVISIBLE)
+            listViewMusic.setVisibility(View.VISIBLE);
+        listViewSearch.setVisibility(View.INVISIBLE);
+        editTextSearch.setText("");
+        return super.onTouchEvent(event);
+
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //hide statusbar
@@ -230,6 +249,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         repeat = (ImageButton) findViewById(R.id.repeat);
         listViewTeams = (ListView) findViewById(R.id.listViewTeams);
         listViewMusic = (ListView) findViewById(R.id.listViewMusic);
+        listViewSearch = (ListView) findViewById(R.id.listViewSearch);
+        listViewSearch.setVisibility(View.INVISIBLE);
         isStarted = false;
         fromIntent = false;
         isShuffle = false;
@@ -237,7 +258,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         getListData();
         animShake = AnimationUtils.loadAnimation(MainActivity.this, R.anim.shake);
 
-        //getMusic();
+
         //for (String a : music) {
          //   musicTrimmed.add(a.substring(25));
         //}
@@ -248,6 +269,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         adapterSpinner = new ArrayAdapter<String>(this,
                 R.layout.spinner_item, musicTrimmed);
         adapterSpinner.setDropDownViewResource(R.layout.spinner_item);
+
+
         //spinner.setAdapter(adapterSpinner);
         //helps but depricated
         //spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorPink), PorterDuff.Mode.SRC_ATOP);
@@ -331,7 +354,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
         //init Handlers
         initHandlers();
-
+        musicList = new ArrayAdapter<String>(getApplicationContext(), R.layout.spinner_item, musicTrimmedSearch );
+        listViewSearch.setAdapter(musicList);
 
         handlerBT = BluetoothHandler.getHandlerBT(this);
         checkBTstate = new Handler();
@@ -486,8 +510,15 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                musicList = new ArrayAdapter<String>(getApplicationContext(), R.layout.spinner_item, music );
-                listViewMusic.setAdapter(musicList);
+                if(editTextSearch.getText().toString().equals("")){
+                    listViewSearch.setVisibility(View.INVISIBLE);
+                    listViewMusic.setVisibility(View.VISIBLE);
+                }
+                else{
+                    listViewSearch.setVisibility(View.VISIBLE);
+                    listViewMusic.setVisibility(View.INVISIBLE);
+                }
+
                 MainActivity.this.musicList.getFilter().filter(s);
             }
 
@@ -684,6 +715,21 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     isRepeat = true;
                     repeat.setBackgroundResource(R.drawable.repeat_pushed_blue);
                 }
+            }
+        });
+
+        listViewSearch.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                File file = new File((String) listViewSearch.getItemAtPosition(position));
+                textViewSong.setText(file.getName());
+                Log.e("WÄSCHE",""+file.getName());
+                try {
+                    playSong("/storage/emulated/0/Music" +file.getAbsolutePath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
             }
         });
 
@@ -948,6 +994,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         alarmTeam();
         //checkBT();
         getDir(root);
+        getMusic();
     }
 
         public static void empfangen() {
@@ -1599,15 +1646,15 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
 
-    /*public void getMusic() { //String[]
+    public void getMusic() { //String[]
         //FOR ACTUAL DEVICE
-    *//*    String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension("mp3");
+        String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension("mp3");
         String selectionMimeType = MediaStore.Files.FileColumns.MIME_TYPE + "=?";
         String[] selectionArgsMp3 = new String[]{ mimeType};
         final Cursor mCursor = getContentResolver().query(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 new String[] {String.valueOf(MediaStore.Audio.Media.DISPLAY_NAME)}, selectionMimeType , selectionArgsMp3,
-                MediaStore.Audio.Media._ID);*//*
+                MediaStore.Audio.Media._ID);
         ContentResolver cr = this.getContentResolver();
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
@@ -1622,7 +1669,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             if (count > 0) {
                 while (cur.moveToNext()) {
                         String data = cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA));
-                        music.add(data);
+                        musicTest.add(data);
 
 
                     // Add code to get more column here
@@ -1632,14 +1679,19 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
             }
         }
-
+        for (String a : musicTest) {
+            musicTrimmedSearch.add(a.substring(25));
+        }
         cur.close();
-        for(int i = 0; i < music.size(); i++)
-            Log.e("music unne","" + music.get(i));
+        for(int i = 0; i < musicTest.size(); i++)
+            Log.e("music unne","" + musicTest.get(i));
+
+        for(int i = 0; i < musicTrimmedSearch.size(); i++)
+            Log.e("music unne","" + musicTrimmedSearch.get(i));
 
 
 
-     *//*   int count = mCursor.getCount();
+       /* int count = mCursor.getCount();
 
         String[] songs = new String[count];
         int i = 0;
@@ -1650,11 +1702,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             } while (mCursor.moveToNext());
         }
 
-        mCursor.close();*//*
+        mCursor.close();*/
 
         // return songs;
     }
-*/
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
@@ -1846,9 +1897,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-
         //this.unregisterReceiver(mReceiver);
-        // TODO
+        // TODO music kracht!
     }
 
     @Override

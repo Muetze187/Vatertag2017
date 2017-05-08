@@ -169,6 +169,14 @@
         android:layout_below="@+id/dividerMainHorizontal"
         />
 
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/listViewSearch"
+        android:layout_toRightOf="@+id/dividerMainInvisible"
+        android:layout_below="@+id/dividerMainHorizontal"
+        />
+
 
 
     <View
