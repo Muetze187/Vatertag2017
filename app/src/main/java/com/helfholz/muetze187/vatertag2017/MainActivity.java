@@ -71,6 +71,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.vision.text.Text;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -114,6 +115,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     EditText editTextSearch;
     TextView textViewReceive;
     TextView textViewSong;
+
     final String DRINKAMOUNT = "Zu trinkende Menge: ";
     int currentSong;
     int currentPosition;
@@ -241,6 +243,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         textViewSong = (TextView) findViewById(R.id.textViewSong);
         textViewSong.setText("no song selected");
 
+
+
         adelheid = (TextView) findViewById(R.id.textView2);
         play = (ImageButton) findViewById(R.id.play);
         prev = (ImageButton) findViewById(R.id.prev);
@@ -341,7 +345,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
         defaultUEH = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(_unCaughtExceptionHandler);
-
 
         //buttonHeartbeatDrillo = (Button) findViewById(R.id.buttonFettACTION);
 
@@ -860,8 +863,14 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                             //dialogChangeName.setTitle("Teamname ändern");
                             Button buttonOK = (Button) dialogChangeName.findViewById(R.id.buttonChangeTeamOK);
                             final EditText editName = (EditText) dialogChangeName.findViewById(R.id.editTextChangeTeam);
+                            editName.setText(teamList.get(position).getName());
                             final EditText editMemberOne = (EditText) dialogChangeName.findViewById(R.id.editTextChangeMemberOne);
+                            editMemberOne.setText(teamList.get(position).getMemberOne());
                             final EditText editMemberTwo = (EditText) dialogChangeName.findViewById(R.id.editTextChangeMemberTwo);
+                            editMemberTwo.setText(teamList.get(position).getMemberTwo());
+                            final EditText editMemberThree = (EditText) dialogChangeName.findViewById(R.id.editTextChangeMemberThree);
+                            editMemberThree.setText(teamList.get(position).getMemberThree());
+
 
                             dialogChangeName.setCanceledOnTouchOutside(true);
                             dialogChangeName.show();
@@ -871,31 +880,40 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                     String tmp = editName.getText().toString();
                                     String tmp2 = editMemberOne.getText().toString();
                                     String tmp3 = editMemberTwo.getText().toString();
+                                    String tmp4 = editMemberThree.getText().toString();
                                     if (editName.getText().toString().equals("")){
-                                        teamList.get(position).setName("no name selected");
+                                        teamList.get(position).setName("no name");
                                     }
                                     else{
                                         teamList.get(position).setName(tmp);
                                     }
 
                                     if (editMemberOne.getText().toString().equals("")){
-                                        teamList.get(position).setMemberOne("no name selected");
+                                        teamList.get(position).setMemberOne("no name");
                                     }
                                     else{
                                         teamList.get(position).setMemberOne(tmp2);
                                     }
 
                                     if (editMemberTwo.getText().toString().equals("")){
-                                        teamList.get(position).setMemberTwo("no name selected");
+                                        teamList.get(position).setMemberTwo("no name");
                                     }
                                     else{
                                         teamList.get(position).setMemberTwo(tmp3);
+                                    }
+
+                                    if (editMemberThree.getText().toString().equals("")){
+                                        teamList.get(position).setMemberThree("no name");
+                                    }
+                                    else{
+                                        teamList.get(position).setMemberThree(tmp4);
                                     }
 
                                     adapterTeamList.notifyDataSetChanged();
                                     editName.setText("");
                                     editMemberOne.setText("");
                                     editMemberTwo.setText("");
+                                    editMemberThree.setText("");
                                     dialogChangeName.dismiss();
                                 }
                             });
@@ -933,46 +951,95 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         @Override
                         public void onClick(View view) {
                             dialogNewTeam.setTitle("Teamname wählen");
+                            final boolean[] hasThreeMembers = {true};
                             Button buttonOK = (Button) dialogNewTeam.findViewById(R.id.buttonChangeTeamOK);
                             final EditText editName = (EditText) dialogNewTeam.findViewById(R.id.editTextChangeTeam);
                             final EditText editMemberOne = (EditText) dialogNewTeam.findViewById(R.id.editTextChangeMemberOne);
                             final EditText editMemberTwo = (EditText) dialogNewTeam.findViewById(R.id.editTextChangeMemberTwo);
+                            final EditText editMemberThree = (EditText) dialogNewTeam.findViewById(R.id.editTextChangeMemberThree);
+                            final ImageView imageViewTeamSize2 = (ImageView) dialogNewTeam.findViewById(R.id.imageViewTeamsize2);
+                            final ImageView imageViewTeamSize3 = (ImageView) dialogNewTeam.findViewById(R.id.imageViewTeamsize3);
+                            final TextView textViewMember3 = (TextView) dialogNewTeam.findViewById(R.id.textViewChangeTeamMemberThree);
                             dialogNewTeam.show();
                             imageViewPigClosedEyes.setImageResource(R.drawable.schwein);
+
+                            imageViewTeamSize2.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    imageViewTeamSize2.setBackgroundResource(R.drawable.number2pink);
+                                    imageViewTeamSize3.setBackgroundResource(R.drawable.number3white);
+                                    editMemberThree.setVisibility(View.INVISIBLE);
+                                    textViewMember3.setVisibility(View.INVISIBLE);
+                                    hasThreeMembers[0] = false;
+                                }
+                            });
+
+                            imageViewTeamSize3.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    imageViewTeamSize2.setBackgroundResource(R.drawable.number2white);
+                                    imageViewTeamSize3.setBackgroundResource(R.drawable.number3pink);
+                                    editMemberThree.setVisibility(View.VISIBLE);
+                                    textViewMember3.setVisibility(View.VISIBLE);
+                                    hasThreeMembers[0] = true;
+                                }
+                            });
+
                             buttonOK.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {
-                                    Teams team = new Teams(getApplicationContext());
-                                    String tmp = editName.getText().toString();
-                                    String tmp2 = editMemberOne.getText().toString();
-                                    String tmp3 = editMemberTwo.getText().toString();
-                                    if (editName.getText().toString().equals("")){
-                                        team.setName("no name selected");
-                                    }
-                                    else{
+                                    //Teams team = new Teams(getApplicationContext());
+                                    if(hasThreeMembers[0]){
+                                        String tmp = editName.getText().toString();
+                                        String tmp2 = editMemberOne.getText().toString();
+                                        String tmp3 = editMemberTwo.getText().toString();
+                                        String tmp4 = editMemberThree.getText().toString();
+                                        if (editName.getText().toString().equals("")) {
+                                            //team.setName("no name");
+                                            tmp = "no name";
+                                        }
+                                        if (editMemberOne.getText().toString().equals("")){
+                                            //team.setMemberOne("no name");
+                                            tmp2 = "no name";
+                                        }
+                                        if (editMemberTwo.getText().toString().equals("")){
+                                            //team.setMemberTwo("no name");
+                                            tmp3 = "no name";
+                                        }
+                                        if (editMemberThree.getText().toString().equals("")){
+                                            //team.setMemberThree("no name");
+                                            tmp4 = "no name";
+                                        }
+                                        Teams team = new Teams(getApplicationContext(), tmp2,tmp3,tmp4);
                                         team.setName(tmp);
+                                        team.setDrunk(0);
+                                        teamList.add(0, team);
+                                    }else{
+                                        String tmp = editName.getText().toString();
+                                        String tmp2 = editMemberOne.getText().toString();
+                                        String tmp3 = editMemberTwo.getText().toString();
+                                        if (editName.getText().toString().equals("")) {
+                                            //team.setName("no name");
+                                            tmp = "no name";
+                                        }
+                                        if (editMemberOne.getText().toString().equals("")){
+                                            //team.setMemberOne("no name");
+                                            tmp2 = "no name";
+                                        }
+                                        if (editMemberTwo.getText().toString().equals("")){
+                                            //team.setMemberTwo("no name");
+                                            tmp3 = "no name";
+                                        }
+                                        Teams team = new Teams(getApplicationContext(), tmp2,tmp3);
+                                        team.setName(tmp);
+                                        team.setDrunk(0);
+                                        teamList.add(0, team);
                                     }
-                                    if (editMemberOne.getText().toString().equals("")){
-                                        team.setMemberOne("no name selected");
-                                    }
-                                    else{
-                                        team.setMemberOne(tmp2);
-                                    }
-
-                                    if (editMemberTwo.getText().toString().equals("")){
-                                        team.setMemberTwo("no name selected");
-                                    }
-                                    else{
-                                        team.setMemberTwo(tmp3);
-                                    }
-
-
-                                    team.setDrunk(0);
-                                    teamList.add(0, team);
                                     adapterTeamList.notifyDataSetChanged();
                                     editName.setText("");
                                     editMemberOne.setText("");
                                     editMemberTwo.setText("");
+                                    editMemberThree.setText("");
                                     dialogNewTeam.dismiss();
 
                                 }
@@ -1028,6 +1095,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         }
 
     private void saveTeams(){
+        for(Teams team:teamList){
+            team.setAlerted(false);
+        }
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         SharedPreferences.Editor editor = prefs.edit();
         Gson gson = new Gson();
@@ -1058,16 +1128,149 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     ////////////////////////----------------------------\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\TODO
 
-    private void doTheShit(){
+
+
+
+
+    ////////////////////////----------------------------\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\TODO
+
+
+
+
+
+
+    private void resetDrinkDialog(){
+        hasChoosen = 0;
+        drink = -1;
+        imageViewDrink1.setColorFilter(Color.TRANSPARENT);
+        imageViewDrink2.setColorFilter(Color.TRANSPARENT);
+        imageViewDrink3.setColorFilter(Color.TRANSPARENT);
+        tmp = -1;
+        amountToDrink = 2;
+        buttonRandomDrink.setEnabled(true);
+        buttonRandomDrink.setText("Mischen");
+        buttonRandomDrink.setClickable(true);
+        imageViewDrink1.setEnabled(true);
+        imageViewDrink2.setEnabled(true);
+        imageViewDrink3.setEnabled(true);
+    }
+
+    private void finishDialogChooseDrink(final int pos){
+        teamPos = pos;
+        buttonRandomDrink.setText("Prost!");
+        buttonRandomDrink.setEnabled(false);
+        imageViewDrink1.setEnabled(false);
+        imageViewDrink2.setEnabled(false);
+        imageViewDrink3.setEnabled(false);
+        imageViewDrink1.clearAnimation();
+        imageViewDrink2.clearAnimation();
+        imageViewDrink3.clearAnimation();
+        teamList.get(pos).increaseStrackLevel(5);
+        teamList.get(pos).setDrunk(teamList.get(pos).getDrunkPlain());
+        teamList.get(pos).setAlerted(false);
+
+
+        switch (winnerDrink){
+            case 1:
+                teamList.get(pos).setCounterOne(teamList.get(pos).getCounterOne() + 1);
+                imageViewDrink1.setColorFilter(Color.GREEN);
+                imageViewDrink2.setColorFilter(Color.RED);
+                imageViewDrink3.setColorFilter(Color.RED);
+                if(amountToDrink == 2)
+                    handlerBT.sendBT("AS:1_2#");
+                else
+                    handlerBT.sendBT("AS:1_4#");
+                Log.e("drink 1 wird geschickt","" + amountToDrink + " cl");
+                break;
+            case 2:
+                teamList.get(pos).setCounterTwo(teamList.get(pos).getCounterTwo() + 1);
+                imageViewDrink1.setColorFilter(Color.RED);
+                imageViewDrink2.setColorFilter(Color.GREEN);
+                imageViewDrink3.setColorFilter(Color.RED);
+                if(amountToDrink == 2)
+                    handlerBT.sendBT("AS:2_2#");
+                else
+                    handlerBT.sendBT("AS:2_4#");
+                Log.e("drink 2 wird geschickt","" + amountToDrink + " cl");
+                break;
+            case 3:
+                teamList.get(pos).setCounterThree(teamList.get(pos).getCounterThree() + 1);
+                imageViewDrink1.setColorFilter(Color.RED);
+                imageViewDrink2.setColorFilter(Color.RED);
+                imageViewDrink3.setColorFilter(Color.GREEN);
+                if(amountToDrink == 2)
+                    handlerBT.sendBT("AS:3_2#");
+                else
+                    handlerBT.sendBT("AS:3_4#");
+                Log.e("drink 3 wird geschickt","" + amountToDrink + " cl");
+                break;
+        }
+        //TODO string richtig empfanen
+        /*final ProgressDialog ringProgressDialog = ProgressDialog.show(MainActivity.this, "Please wait ...", msg, true);
+
+        ringProgressDialog.setCancelable(true);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                empfangen();
+                while(!msg.equals("AS:DONE#")){
+
+                }
+                ringProgressDialog.dismiss();
+
+            }
+        }).start();*/
+        new CountDownTimer(5000, 1000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+            }
+
+            @Override
+            public void onFinish() {
+                if(zaehler == 0 ){
+                    doTheShit();
+                    Log.e("ZAEHLER == 0", "" + zaehler);
+                }
+                if(zaehler <3){
+                    doTheShit();
+                    Log.e("ZAEHLER == 1", "" + zaehler);
+                }
+                if(teamList.get(pos).getHasThreeMembers()){
+                    doTheShit();
+                    Log.e("ZAEHLER == 2", "" + zaehler);
+                }
+                else{
+                    dialogChooseDrink.dismiss();
+                    zaehler = 0;
+                    isOneAlarmed = false;
+                    adapterTeamList.notifyDataSetChanged();
+                }
+            }
+
+
+
+        }.start();
+
+
+
+    }
+
+    private void doTheShit() {
         resetDrinkDialog();
 //        Log.e("Name des Members", textViewNameChoose.getText().toString());
 //        Log.e("MembersUno","" +teamList.get(position2).getMemberOne());
 //        Log.e("MembersDuo",""+teamList.get(position2).getMemberTwo());
 
-        if(zaehler == 0){
+        if (zaehler == 0) {
             textViewNameChoose.setText(teamList.get(position2).getMemberOne().toString() + " @ " + teamList.get(position2).getName().toString());
-        }else{
+            Log.e("doshit ZAEHLER == 0", "" + zaehler);
+        } else if (zaehler < 3) {
             textViewNameChoose.setText(teamList.get(position2).getMemberTwo().toString() + " @ " + teamList.get(position2).getName().toString());
+            Log.e("doshit ZAEHLER == 1", "" + zaehler);
+        } else if (teamList.get(position2).getHasThreeMembers()) {
+            textViewNameChoose.setText(teamList.get(position2).getMemberThree().toString() + " @ " + teamList.get(position2).getName().toString());
+            Log.e("doshit ZAEHLER == 2", "" + zaehler);
         }
 
         textViewAmountDrink.setText(DRINKAMOUNT + amountToDrink + " cl");
@@ -1077,7 +1280,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         getRandomDrink();
         oldDrink = drink;
         Log.d("drink", "drink initial" + drink);
-
+        zaehler++;
 
         dialogChooseDrink.show();
         final Button buttonOK = (Button) dialogDrinkAccepted.findViewById(R.id.buttonDrinkOk);
@@ -1161,119 +1364,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
 
-
-
-    ////////////////////////----------------------------\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\TODO
-
-
-
-
-
-
-    private void resetDrinkDialog(){
-        hasChoosen = 0;
-        drink = -1;
-        imageViewDrink1.setColorFilter(Color.TRANSPARENT);
-        imageViewDrink2.setColorFilter(Color.TRANSPARENT);
-        imageViewDrink3.setColorFilter(Color.TRANSPARENT);
-        tmp = -1;
-        amountToDrink = 2;
-        buttonRandomDrink.setEnabled(true);
-        buttonRandomDrink.setText("Mischen");
-        buttonRandomDrink.setClickable(true);
-        imageViewDrink1.setEnabled(true);
-        imageViewDrink2.setEnabled(true);
-        imageViewDrink3.setEnabled(true);
-    }
-
-    private void finishDialogChooseDrink(int pos){
-        teamPos = pos;
-        buttonRandomDrink.setText("Prost!");
-        buttonRandomDrink.setEnabled(false);
-        imageViewDrink1.setEnabled(false);
-        imageViewDrink2.setEnabled(false);
-        imageViewDrink3.setEnabled(false);
-        imageViewDrink1.clearAnimation();
-        imageViewDrink2.clearAnimation();
-        imageViewDrink3.clearAnimation();
-        teamList.get(pos).increaseStrackLevel(10);
-        teamList.get(pos).setDrunk(teamList.get(pos).getDrunkPlain());
-        teamList.get(pos).setAlerted(false);
-
-
-        switch (winnerDrink){
-            case 1:
-                teamList.get(pos).setCounterOne(teamList.get(pos).getCounterOne() + 1);
-                imageViewDrink1.setColorFilter(Color.GREEN);
-                imageViewDrink2.setColorFilter(Color.RED);
-                imageViewDrink3.setColorFilter(Color.RED);
-                if(amountToDrink == 2)
-                    handlerBT.sendBT("AS:1_2#");
-                else
-                    handlerBT.sendBT("AS:1_4#");
-                Log.e("drink 1 wird geschickt","" + amountToDrink + " cl");
-                break;
-            case 2:
-                teamList.get(pos).setCounterTwo(teamList.get(pos).getCounterTwo() + 1);
-                imageViewDrink1.setColorFilter(Color.RED);
-                imageViewDrink2.setColorFilter(Color.GREEN);
-                imageViewDrink3.setColorFilter(Color.RED);
-                if(amountToDrink == 2)
-                    handlerBT.sendBT("AS:2_2#");
-                else
-                    handlerBT.sendBT("AS:2_4#");
-                Log.e("drink 2 wird geschickt","" + amountToDrink + " cl");
-                break;
-            case 3:
-                teamList.get(pos).setCounterThree(teamList.get(pos).getCounterThree() + 1);
-                imageViewDrink1.setColorFilter(Color.RED);
-                imageViewDrink2.setColorFilter(Color.RED);
-                imageViewDrink3.setColorFilter(Color.GREEN);
-                if(amountToDrink == 2)
-                    handlerBT.sendBT("AS:3_2#");
-                else
-                    handlerBT.sendBT("AS:3_4#");
-                Log.e("drink 3 wird geschickt","" + amountToDrink + " cl");
-                break;
-        }
-        //TODO string richtig empfanen
-        final ProgressDialog ringProgressDialog = ProgressDialog.show(MainActivity.this, "Please wait ...", msg, true);
-
-        ringProgressDialog.setCancelable(true);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                empfangen();
-                while(!msg.equals("AS:DONE#")){
-
-                }
-                ringProgressDialog.dismiss();
-
-            }
-        }).start();
-
-        if(zaehler == 0){
-            zaehler++;
-            doTheShit();
-        }else{
-            dialogChooseDrink.dismiss();
-            zaehler = 0;
-            isOneAlarmed = false;
-            adapterTeamList.notifyDataSetChanged();
-        }
-        /*new CountDownTimer(5000, 1000) {
-
-            @Override
-            public void onTick(long millisUntilFinished) {
-            }
-
-            @Override
-            public void onFinish() {
-
-        }.start();
-*/
-    }
-
     private void getRandomDrink() {
 
         Random rnd = new Random();
@@ -1340,7 +1430,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     private void blizeldiewinzel() {
         hBlinzeln.postDelayed(new Runnable() {
-            int zaehler = 0;
 
             @Override
             public void run() {
@@ -1367,9 +1456,12 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         hAlert.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Random rand = new Random();
-                final int alert = rand.nextInt(teamList.size());
-                toggleAlert(alert);
+                if(alertOn && !isOneAlarmed && handlerBT.getIsConnected()) {
+                    Random rand = new Random();
+                    final int alert = rand.nextInt(teamList.size());
+                    toggleAlert(alert);
+                }
+
                 hAlert.postDelayed(this, delay3);
 
             }
@@ -1491,11 +1583,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     private void toggleAlert(int posList) {
 
-        if(alertOn && !isOneAlarmed && handlerBT.getIsConnected()){
+
             teamList.get(posList).setAlerted(true);
             isOneAlarmed = true;
             //handlerBT.sendBT("ALARM#");
-            fadeOut();
+            //fadeOut();
           /*  if (teamList.get(posList).getAlerted()) {
                 teamList.get(posList).setAlerted(false);
                 Collections.sort(teamList, Teams.teamsComparator);
@@ -1526,35 +1618,25 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
             Collections.sort(teamList, Teams.teamsComparator);
             adapterTeamList.notifyDataSetChanged();
-        }
+
 
     }
 
     private void getListData() {
 
-        Teams team1 = new Teams(getApplicationContext());
+        Teams team1 = new Teams(getApplicationContext(), "Iggy", "Marc");
         team1.setName("Error 404");
-        team1.setMemberOne("Iggy");
-        team1.setMemberTwo("Marc");
         team1.setDrunk(5);
-        team1.setAlerted(false);
         teamList.add(team1);
 
-        Teams team2 = new Teams(getApplicationContext());
+        Teams team2 = new Teams(getApplicationContext(), "Grüni", "Robbvieh");
         team2.setName("Grünviehs");
-        team2.setMemberOne("Grüni");
-        team2.setMemberTwo("Robbvieh");
         team2.setDrunk(23);
-        team2.setAlerted(false);
         teamList.add(team2);
 
-        Teams team3 = new Teams(getApplicationContext());
+        Teams team3 = new Teams(getApplicationContext(), "Gagi", "Achim");
         team3.setName("Gagipenners");
-        team3.setMemberOne("Gagi");
-        team3.setMemberTwo("Achim");
         team3.setDrunk(-3);
-        team3.setAlerted(false);
-
         teamList.add(team3);
 
         /*Teams team4 = new Teams();

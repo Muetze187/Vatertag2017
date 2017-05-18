@@ -23,7 +23,8 @@ public class Teams{
     private String name;
     private String memberOne;
     private String memberTwo;
-
+    private String memberThree;
+    private boolean hasThreeMembers;
     private String strackLevel;
     private String vielfalt;
     private int drunk, counterOne, counterTwo, counterThree;
@@ -34,14 +35,38 @@ public class Teams{
     int progressStrack;
 
 
-    public Teams(Context context){
+    public Teams(Context context, String memberOne, String memberTwo, String memberThree){
         animation = AnimationUtils.loadAnimation(context, R.anim.blink);
         /*animation = new AlphaAnimation(1, 0);
         animation.setDuration(1000);
         animation.setInterpolator(new LinearInterpolator());
         animation.setRepeatCount(Animation.INFINITE);
         animation.setRepeatMode(Animation.RESTART);
-*/
+*/      this.memberOne = memberOne ;
+        this.memberTwo = memberTwo;
+        this.memberThree = memberThree;
+        hasThreeMembers = true;
+        strackLevel = "Müdigkeit: ";
+        vielfalt = "Verteilung: ";
+        isAlerted = false;
+        progressStrack = 0;
+        drunk = 0;
+        counterOne = 0;
+        counterTwo = 0;
+        counterThree = 0;
+        view = 0;
+    }
+
+    public Teams(Context context, String memberOne, String memberTwo){
+        animation = AnimationUtils.loadAnimation(context, R.anim.blink);
+        /*animation = new AlphaAnimation(1, 0);
+        animation.setDuration(1000);
+        animation.setInterpolator(new LinearInterpolator());
+        animation.setRepeatCount(Animation.INFINITE);
+        animation.setRepeatMode(Animation.RESTART);
+*/      this.memberOne = memberOne ;
+        this.memberTwo = memberTwo;
+        hasThreeMembers = false;
         strackLevel = "Müdigkeit: ";
         vielfalt = "Verteilung: ";
         isAlerted = false;
@@ -63,6 +88,10 @@ public class Teams{
 
     public int getCounterThree(){
         return counterThree;
+    }
+
+    public boolean getHasThreeMembers(){
+        return hasThreeMembers;
     }
 
     public String getCounterOneFormatted(){
@@ -104,12 +133,20 @@ public class Teams{
         return memberTwo;
     }
 
+    public String getMemberThree(){
+        return memberThree;
+    }
+
     public void setMemberOne(String name){
         memberOne = name;
     }
 
     public void setMemberTwo(String name){
         memberTwo = name;
+    }
+
+    public void setMemberThree(String name){
+        memberThree = name;
     }
 
     public void setName(String name){

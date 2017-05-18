@@ -1,9 +1,11 @@
 package com.helfholz.muetze187.vatertag2017;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -20,18 +22,20 @@ public class CustomListAdapter extends BaseAdapter {
     private LayoutInflater layoutInflater;
     private ViewGroup.LayoutParams params;
     ViewHolder holder;
+    Context context;
 
-    public CustomListAdapter(MainActivity aContext, ArrayList<Teams> listData) {
+    public CustomListAdapter(Context aContext, ArrayList<Teams> listData) {
         this.listData = listData;
+        context = aContext;
         layoutInflater = LayoutInflater.from(aContext);
 
     }
 
-    public CustomListAdapter(BlauzahnActivity aContext, ArrayList<Teams> listData) {
+    /*public CustomListAdapter(BlauzahnActivity aContext, ArrayList<Teams> listData) {
         this.listData = listData;
         layoutInflater = LayoutInflater.from(aContext);
 
-    }
+    }*/
 
     @Override
     public int getCount() {
@@ -52,7 +56,7 @@ public class CustomListAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
 
         if (convertView == null) {
-           convertView = layoutInflater.inflate(R.layout.team_listview, parent, false);
+           convertView = layoutInflater.inflate(R.layout.team_listview,parent, false);
             holder = new ViewHolder();
             holder.teamNameView = (TextView) convertView.findViewById(R.id.name);
             holder.teamDrunkView = (TextView) convertView.findViewById(R.id.drunk);
@@ -77,8 +81,13 @@ public class CustomListAdapter extends BaseAdapter {
         holder.vielfaltOne.setText(listData.get(position).getCounterOneFormatted());
         holder.vielfaltTwo.setText(listData.get(position).getCounterTwoFormatted());
         holder.vielfaltThree.setText(listData.get(position).getCounterThreeFormatted());
-        if(listData.get(position).getAlerted())
-            holder.alertView.startAnimation(listData.get(position).animation);
+        if(listData.get(position).getAlerted()){
+            if(listData.get(position).animation == null){
+                listData.get(position).animation = AnimationUtils.loadAnimation(context, R.anim.blink);
+            }
+                holder.alertView.startAnimation(listData.get(position).animation);
+        }
+
        /* params = holder.alertView.getLayoutParams();
         params.width = 160;
         params.height = 80;

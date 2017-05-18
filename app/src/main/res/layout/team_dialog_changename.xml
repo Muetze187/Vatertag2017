@@ -1,16 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="600dp"
-    android:layout_height="320dp"
+    android:layout_height="600dp"
     android:layout_centerHorizontal="true"
     android:background="@drawable/dialog_border">
 
     <TextView
+        android:layout_width="360dp"
+        android:layout_height="60dp"
+        android:text="Teamgröße wählen:"
+        android:textSize="40sp"
+        android:textColor="#ffaaab"
+        android:layout_marginBottom="20dp"
+        android:id="@+id/textViewChangeTeamTeamsize"/>
+    <ImageButton
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:background="@drawable/number2white"
+        android:layout_below="@+id/textViewChangeTeamTeamsize"
+        android:id="@+id/imageViewTeamsize2"/>
+    <ImageButton
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:background="@drawable/number3pink"
+        android:layout_marginLeft="20dp"
+        android:layout_below="@+id/textViewChangeTeamTeamsize"
+        android:layout_toRightOf="@+id/imageViewTeamsize2"
+        android:id="@+id/imageViewTeamsize3"/>
+    <TextView
         android:layout_width="320dp"
-        android:layout_height="50dp"
+        android:layout_height="60dp"
         android:text="Namen eingeben: "
+        android:layout_marginTop="20dp"
         android:textSize="40sp"
         android:id="@+id/textViewChangeTeamHeadline"
+        android:layout_below="@+id/imageViewTeamsize2"
         android:textColor="#ffaaab" />
 
     <TextView
@@ -38,6 +62,14 @@
         android:id="@+id/textViewChangeTeamMemberTwo"
         android:layout_below="@+id/textViewChangeTeamMemberOne"
         android:textColor="#ffaaab" />
+    <TextView
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:text="Mitglied 3: "
+        android:textSize="32sp"
+        android:id="@+id/textViewChangeTeamMemberThree"
+        android:layout_below="@+id/textViewChangeTeamMemberTwo"
+        android:textColor="#ffaaab" />
 
 
     <EditText
@@ -45,6 +77,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/editTextChangeTeam"
         android:textColor="#ffaaab"
+
         android:layout_toRightOf="@+id/textViewChangeTeamHeadline"
         android:layout_below="@+id/textViewChangeTeamHeadline"
         />
@@ -63,14 +96,24 @@
           android:layout_below="@+id/textViewChangeTeamMemberOne"
           android:layout_alignStart="@+id/editTextChangeMemberOne" />
 
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/editTextChangeMemberThree"
+        android:textColor="#ffaaab"
+        android:layout_below="@+id/textViewChangeTeamMemberTwo"
+        android:layout_alignStart="@+id/editTextChangeMemberTwo" />
+
 
     <Button
         android:layout_width="200dp"
         android:layout_height="100dp"
         android:text="OK"
-        android:layout_below="@+id/textViewChangeTeamMemberTwo"
+        android:layout_marginTop="40dp"
+        android:layout_below="@+id/textViewChangeTeamMemberThree"
         android:id="@+id/buttonChangeTeamOK"
         android:textSize="32sp"
+        android:layout_centerHorizontal="true"
         android:textColor="#ffaaab"
         />
 

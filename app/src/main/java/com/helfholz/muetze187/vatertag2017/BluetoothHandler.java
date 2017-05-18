@@ -8,24 +8,35 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.Toast;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Type;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import static com.helfholz.muetze187.vatertag2017.BlauzahnActivity.btArrayAdapter;
 import static com.helfholz.muetze187.vatertag2017.BlauzahnActivity.filterBlauZahn;
 import static com.helfholz.muetze187.vatertag2017.BlauzahnActivity.mReceiverBlauZahn;
 import static com.helfholz.muetze187.vatertag2017.BlauzahnActivity.textViewinfo;
+import static com.helfholz.muetze187.vatertag2017.MainActivity.adapterTeamList;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.alarmsOff;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.empfangen;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.filter;
+import static com.helfholz.muetze187.vatertag2017.MainActivity.listViewTeams;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.mReceiver;
+import static com.helfholz.muetze187.vatertag2017.MainActivity.teamList;
 
 
 /**
@@ -275,6 +286,37 @@ public class BluetoothHandler extends Application{
 
 
     }
+
+
+    /*public void saveTeams(Context context){
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(teamList);
+        editor.putString("Teams", json);
+        editor.commit();
+        Toast.makeText(this, "Teams erfolgreich gespeichert", Toast.LENGTH_SHORT).show ();
+        for(int i = 0; i < teamList.size(); i++)
+            Log.d("saved ", "teams " + teamList.get(i).getName() +"JSON: " + json);
+    }
+
+    public void loadTeams(Context context){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        Gson gson = new Gson();
+        String json = prefs.getString("Teams",null);
+        if(json != null){
+            Type type = new TypeToken<ArrayList<Teams>>(){}.getType();
+            teamList = gson.fromJson(json, type);
+        }
+        Toast.makeText(this, "Teams erfolgreich geladen", Toast.LENGTH_SHORT).show ();
+        Log.d("teamListLoad", "TeamList " +teamList.size()+ " JSON " + json);
+        //teamList = tmp;
+        adapterTeamList = new CustomListAdapter(context, teamList);
+
+        listViewTeams.setAdapter(adapterTeamList);
+        adapterTeamList.notifyDataSetChanged();
+    }*/
 
 
 }
