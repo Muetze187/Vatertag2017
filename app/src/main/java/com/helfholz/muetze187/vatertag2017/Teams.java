@@ -18,7 +18,7 @@ import java.util.Comparator;
 /**
  * Created by Muetze187 on 28.06.2016.
  */
-public class Teams{
+public class Teams implements Cloneable{
 
     private String name;
     private String memberOne;
@@ -92,6 +92,10 @@ public class Teams{
 
     public boolean getHasThreeMembers(){
         return hasThreeMembers;
+    }
+
+    public void setHasThreeMembers(boolean flag) {
+        hasThreeMembers = flag;
     }
 
     public String getCounterOneFormatted(){
@@ -207,5 +211,9 @@ public class Teams{
             return alert2.compareTo(alert1);
         }
     };
+
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
 
 }

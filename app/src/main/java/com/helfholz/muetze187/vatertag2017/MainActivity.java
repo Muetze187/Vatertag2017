@@ -852,7 +852,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
                 });
                 if (teamList.get(position).getAlerted()) {
-                    doTheShit();
+                    doTheShit(teamList.get(position).getMemberOne());
 
                 } else {
 
@@ -861,6 +861,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         public void onClick(View view) {
                             //TODO BUG evtl, Tatstatu geht net hoch...
                             //dialogChangeName.setTitle("Teamname ändern");
+                            final boolean[] hasThreeMembers = {true};
                             Button buttonOK = (Button) dialogChangeName.findViewById(R.id.buttonChangeTeamOK);
                             final EditText editName = (EditText) dialogChangeName.findViewById(R.id.editTextChangeTeam);
                             editName.setText(teamList.get(position).getName());
@@ -870,10 +871,52 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                             editMemberTwo.setText(teamList.get(position).getMemberTwo());
                             final EditText editMemberThree = (EditText) dialogChangeName.findViewById(R.id.editTextChangeMemberThree);
                             editMemberThree.setText(teamList.get(position).getMemberThree());
+                            final ImageView imageViewTeamSize2 = (ImageView) dialogChangeName.findViewById(R.id.imageViewTeamsize2);
+                            final ImageView imageViewTeamSize3 = (ImageView) dialogChangeName.findViewById(R.id.imageViewTeamsize3);
+                            final TextView textViewMember3 = (TextView) dialogChangeName.findViewById(R.id.textViewChangeTeamMemberThree);
+
 
 
                             dialogChangeName.setCanceledOnTouchOutside(true);
                             dialogChangeName.show();
+
+                            if(!teamList.get(position).getHasThreeMembers()){
+                                imageViewTeamSize2.setBackgroundResource(R.drawable.number2pink);
+                                imageViewTeamSize3.setBackgroundResource(R.drawable.number3white);
+                                textViewMember3.setVisibility(View.INVISIBLE);
+                                editMemberThree.setVisibility(View.INVISIBLE);
+                                hasThreeMembers[0] = false;
+                            }else{
+                                imageViewTeamSize2.setBackgroundResource(R.drawable.number2white);
+                                imageViewTeamSize3.setBackgroundResource(R.drawable.number3pink);
+                                textViewMember3.setVisibility(View.VISIBLE);
+                                editMemberThree.setVisibility(View.VISIBLE);
+                                hasThreeMembers[0] = true;
+                            }
+
+                            imageViewTeamSize2.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    imageViewTeamSize2.setBackgroundResource(R.drawable.number2pink);
+                                    imageViewTeamSize3.setBackgroundResource(R.drawable.number3white);
+                                    textViewMember3.setVisibility(View.INVISIBLE);
+                                    editMemberThree.setVisibility(View.INVISIBLE);
+                                    hasThreeMembers[0] = false;
+
+                                }
+                            });
+
+                            imageViewTeamSize3.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    imageViewTeamSize2.setBackgroundResource(R.drawable.number2white);
+                                    imageViewTeamSize3.setBackgroundResource(R.drawable.number3pink);
+                                    textViewMember3.setVisibility(View.VISIBLE);
+                                    editMemberThree.setVisibility(View.VISIBLE);
+                                    hasThreeMembers[0] = true;
+                                }
+                            });
+
                             buttonOK.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {
@@ -881,33 +924,55 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                     String tmp2 = editMemberOne.getText().toString();
                                     String tmp3 = editMemberTwo.getText().toString();
                                     String tmp4 = editMemberThree.getText().toString();
-                                    if (editName.getText().toString().equals("")){
-                                        teamList.get(position).setName("no name");
+                                    if (editName.getText().toString().equals("")) {
+                                        //team.setName("no name");
+                                        tmp = "no name";
                                     }
-                                    else{
-                                        teamList.get(position).setName(tmp);
-                                    }
-
                                     if (editMemberOne.getText().toString().equals("")){
-                                        teamList.get(position).setMemberOne("no name");
+                                        //team.setMemberOne("no name");
+                                        tmp2 = "no name";
                                     }
-                                    else{
-                                        teamList.get(position).setMemberOne(tmp2);
-                                    }
-
                                     if (editMemberTwo.getText().toString().equals("")){
-                                        teamList.get(position).setMemberTwo("no name");
+                                        //team.setMemberTwo("no name");
+                                        tmp3 = "no name";
                                     }
-                                    else{
-                                        teamList.get(position).setMemberTwo(tmp3);
+                                    if (editMemberThree.getText().toString().equals("")){
+                                        //team.setMemberThree("no name");
+                                        tmp4 = "no name";
                                     }
 
-                                    if (editMemberThree.getText().toString().equals("")){
-                                        teamList.get(position).setMemberThree("no name");
+
+                                    if(hasThreeMembers[0]){
+                                        teamList.get(position).setHasThreeMembers(true);
+                                        Teams team = null;
+                                        try {
+                                            team = (Teams)teamList.get(position).clone();
+                                            team.setMemberOne(tmp2);
+                                            team.setMemberTwo(tmp3);
+                                            team.setMemberThree(tmp4);
+                                            team.setName(tmp);
+                                            teamList.remove(position);
+                                            teamList.add((int)position, team);
+
+                                        } catch (CloneNotSupportedException e) {
+                                            e.printStackTrace();
+                                        }
+
+                                    }else{
+                                        teamList.get(position).setHasThreeMembers(false);
+                                        Teams team = null;
+                                        try {
+                                            team = (Teams)teamList.get(position).clone();
+                                            team.setMemberOne(tmp2);
+                                            team.setMemberTwo(tmp3);
+                                            team.setName(tmp);
+                                            teamList.remove(position);
+                                            teamList.add((int)position, team);
+                                        } catch (CloneNotSupportedException e) {
+                                            e.printStackTrace();
+                                        }
                                     }
-                                    else{
-                                        teamList.get(position).setMemberThree(tmp4);
-                                    }
+
 
                                     adapterTeamList.notifyDataSetChanged();
                                     editName.setText("");
@@ -1228,27 +1293,20 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
             @Override
             public void onFinish() {
-                if(zaehler == 0 ){
-                    doTheShit();
-                    Log.e("ZAEHLER == 0", "" + zaehler);
-                }
-                if(zaehler <3){
-                    doTheShit();
-                    Log.e("ZAEHLER == 1", "" + zaehler);
-                }
-                if(teamList.get(pos).getHasThreeMembers()){
-                    doTheShit();
-                    Log.e("ZAEHLER == 2", "" + zaehler);
-                }
-                else{
+                if(zaehler == 0){
+                    doTheShit(teamList.get(pos).getMemberTwo());
+                    zaehler++;
+                } else if(zaehler == 1 && teamList.get(pos).getHasThreeMembers()){
+                    doTheShit(teamList.get(pos).getMemberThree());
+                    zaehler++;
+                }else{
                     dialogChooseDrink.dismiss();
                     zaehler = 0;
                     isOneAlarmed = false;
                     adapterTeamList.notifyDataSetChanged();
                 }
+
             }
-
-
 
         }.start();
 
@@ -1256,31 +1314,17 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     }
 
-    private void doTheShit() {
+    private void doTheShit(String text) {
         resetDrinkDialog();
-//        Log.e("Name des Members", textViewNameChoose.getText().toString());
-//        Log.e("MembersUno","" +teamList.get(position2).getMemberOne());
-//        Log.e("MembersDuo",""+teamList.get(position2).getMemberTwo());
-
-        if (zaehler == 0) {
-            textViewNameChoose.setText(teamList.get(position2).getMemberOne().toString() + " @ " + teamList.get(position2).getName().toString());
-            Log.e("doshit ZAEHLER == 0", "" + zaehler);
-        } else if (zaehler < 3) {
-            textViewNameChoose.setText(teamList.get(position2).getMemberTwo().toString() + " @ " + teamList.get(position2).getName().toString());
-            Log.e("doshit ZAEHLER == 1", "" + zaehler);
-        } else if (teamList.get(position2).getHasThreeMembers()) {
-            textViewNameChoose.setText(teamList.get(position2).getMemberThree().toString() + " @ " + teamList.get(position2).getName().toString());
-            Log.e("doshit ZAEHLER == 2", "" + zaehler);
-        }
+        textViewNameChoose.setText(text + " @ " + teamList.get(position2).getName());
 
         textViewAmountDrink.setText(DRINKAMOUNT + amountToDrink + " cl");
         textViewGlueckwunsch.setText("Glückwunsch! Dies ist euer " + teamList.get(position2).getDrunkPlain() + ". Schnaps!");
-        //int drink = rnd.nextInt(3);
 
         getRandomDrink();
         oldDrink = drink;
         Log.d("drink", "drink initial" + drink);
-        zaehler++;
+
 
         dialogChooseDrink.show();
         final Button buttonOK = (Button) dialogDrinkAccepted.findViewById(R.id.buttonDrinkOk);
