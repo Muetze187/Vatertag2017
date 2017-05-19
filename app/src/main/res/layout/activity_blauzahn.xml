@@ -196,7 +196,18 @@
         android:layout_alignBottom="@+id/dividerHorizontal"
         android:id="@+id/switchWartungToggleAlarm"
         android:layout_marginLeft="4dp"
-        android:textSize="18sp"/>
+        android:textSize="16sp"/>
+
+    <Switch
+        android:text="Gleiche Drink off/on"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewWartungTeams"
+        android:layout_alignBottom="@+id/dividerHorizontal"
+        android:id="@+id/switchWartungToggleDrinkTeam"
+        android:layout_marginLeft="4dp"
+        android:layout_toRightOf="@+id/switchWartungToggleAlarm"
+        android:textSize="16sp"/>
 
     <TextView
         android:layout_width="wrap_content"

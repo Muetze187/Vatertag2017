@@ -95,8 +95,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     //Gui Elements
     boolean successBT = false;
     static boolean alertOn = true;
+    static boolean sameDrinkTeam = false;
     static boolean isOneAlarmed = false;
     static String msg = "";
+    static int maxVal = 900000;
+    static  int minVal = 300000;
     Switch switchAlarm;
     TextView textViewDateTime;
     static TextView textFett;
@@ -852,7 +855,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
                 });
                 if (teamList.get(position).getAlerted()) {
-                    doTheShit(teamList.get(position).getMemberOne());
+                        doTheShit(teamList.get(position).getMemberOne(),false);
 
                 } else {
 
@@ -982,7 +985,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                                     dialogChangeName.dismiss();
                                 }
                             });
-                            blizeldiewinzel();
+                            //blizeldiewinzel();
                         }
                     });
                     buttonDeleteTeam.setOnClickListener(new View.OnClickListener() {
@@ -1008,7 +1011,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
                                 }
                             });
-                            blizeldiewinzel();
+                            //blizeldiewinzel();
                         }
                     });
 
@@ -1109,11 +1112,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
                                 }
                             });
-                            blizeldiewinzel();
+                           // blizeldiewinzel();
                         }
                     });
 
-                    blizeldiewinzel();
+
                     dialogTeamChoice.show();
 
                 }
@@ -1127,6 +1130,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         //checkBT();
         getDir(root);
         getMusic();
+        blizeldiewinzel();
     }
 
         public static void empfangen() {
@@ -1211,9 +1215,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         imageViewDrink2.setColorFilter(Color.TRANSPARENT);
         imageViewDrink3.setColorFilter(Color.TRANSPARENT);
         tmp = -1;
-        amountToDrink = 2;
-        buttonRandomDrink.setEnabled(true);
+        if(!sameDrinkTeam)
+            amountToDrink = 2;
         buttonRandomDrink.setText("Mischen");
+        buttonRandomDrink.setEnabled(true);
         buttonRandomDrink.setClickable(true);
         imageViewDrink1.setEnabled(true);
         imageViewDrink2.setEnabled(true);
@@ -1232,59 +1237,49 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         imageViewDrink3.clearAnimation();
         teamList.get(pos).increaseStrackLevel(5);
         teamList.get(pos).setDrunk(teamList.get(pos).getDrunkPlain());
-        teamList.get(pos).setAlerted(false);
 
 
-        switch (winnerDrink){
-            case 1:
-                teamList.get(pos).setCounterOne(teamList.get(pos).getCounterOne() + 1);
-                imageViewDrink1.setColorFilter(Color.GREEN);
-                imageViewDrink2.setColorFilter(Color.RED);
-                imageViewDrink3.setColorFilter(Color.RED);
-                if(amountToDrink == 2)
-                    handlerBT.sendBT("AS:1_2#");
-                else
-                    handlerBT.sendBT("AS:1_4#");
-                Log.e("drink 1 wird geschickt","" + amountToDrink + " cl");
-                break;
-            case 2:
-                teamList.get(pos).setCounterTwo(teamList.get(pos).getCounterTwo() + 1);
-                imageViewDrink1.setColorFilter(Color.RED);
-                imageViewDrink2.setColorFilter(Color.GREEN);
-                imageViewDrink3.setColorFilter(Color.RED);
-                if(amountToDrink == 2)
-                    handlerBT.sendBT("AS:2_2#");
-                else
-                    handlerBT.sendBT("AS:2_4#");
-                Log.e("drink 2 wird geschickt","" + amountToDrink + " cl");
-                break;
-            case 3:
-                teamList.get(pos).setCounterThree(teamList.get(pos).getCounterThree() + 1);
-                imageViewDrink1.setColorFilter(Color.RED);
-                imageViewDrink2.setColorFilter(Color.RED);
-                imageViewDrink3.setColorFilter(Color.GREEN);
-                if(amountToDrink == 2)
-                    handlerBT.sendBT("AS:3_2#");
-                else
-                    handlerBT.sendBT("AS:3_4#");
-                Log.e("drink 3 wird geschickt","" + amountToDrink + " cl");
-                break;
+            switch (winnerDrink){
+                case 1:
+                    teamList.get(pos).setCounterOne(teamList.get(pos).getCounterOne() + 1);
+                    imageViewDrink1.setColorFilter(Color.GREEN);
+                    imageViewDrink2.setColorFilter(Color.RED);
+                    imageViewDrink3.setColorFilter(Color.RED);
+                    if(amountToDrink == 2)
+                        handlerBT.sendBT("AS:1_2#");
+                    else
+                        handlerBT.sendBT("AS:1_4#");
+                    Log.e("drink 1 wird geschickt","" + amountToDrink + " cl");
+                    break;
+                case 2:
+                    teamList.get(pos).setCounterTwo(teamList.get(pos).getCounterTwo() + 1);
+                    imageViewDrink1.setColorFilter(Color.RED);
+                    imageViewDrink2.setColorFilter(Color.GREEN);
+                    imageViewDrink3.setColorFilter(Color.RED);
+                    if(amountToDrink == 2)
+                        handlerBT.sendBT("AS:2_2#");
+                    else
+                        handlerBT.sendBT("AS:2_4#");
+                    Log.e("drink 2 wird geschickt","" + amountToDrink + " cl");
+                    break;
+                case 3:
+                    teamList.get(pos).setCounterThree(teamList.get(pos).getCounterThree() + 1);
+                    imageViewDrink1.setColorFilter(Color.RED);
+                    imageViewDrink2.setColorFilter(Color.RED);
+                    imageViewDrink3.setColorFilter(Color.GREEN);
+                    if(amountToDrink == 2)
+                        handlerBT.sendBT("AS:3_2#");
+                    else
+                        handlerBT.sendBT("AS:3_4#");
+                    Log.e("drink 3 wird geschickt","" + amountToDrink + " cl");
+                    break;
+
         }
+
+
+
         //TODO string richtig empfanen
-        /*final ProgressDialog ringProgressDialog = ProgressDialog.show(MainActivity.this, "Please wait ...", msg, true);
 
-        ringProgressDialog.setCancelable(true);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                empfangen();
-                while(!msg.equals("AS:DONE#")){
-
-                }
-                ringProgressDialog.dismiss();
-
-            }
-        }).start();*/
         new CountDownTimer(5000, 1000) {
 
             @Override
@@ -1294,16 +1289,26 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             @Override
             public void onFinish() {
                 if(zaehler == 0){
-                    doTheShit(teamList.get(pos).getMemberTwo());
+                    if(sameDrinkTeam){
+                        doTheShit(teamList.get(pos).getMemberTwo(), true);
+                    }else{
+                        doTheShit(teamList.get(pos).getMemberTwo(), false);
+                    }
                     zaehler++;
                 } else if(zaehler == 1 && teamList.get(pos).getHasThreeMembers()){
-                    doTheShit(teamList.get(pos).getMemberThree());
+                    if(sameDrinkTeam){
+                        doTheShit(teamList.get(pos).getMemberThree(), true);
+                    }else{
+                        doTheShit(teamList.get(pos).getMemberThree(), false);
+                    }
                     zaehler++;
                 }else{
                     dialogChooseDrink.dismiss();
                     zaehler = 0;
                     isOneAlarmed = false;
+                    amountToDrink = 2;
                     adapterTeamList.notifyDataSetChanged();
+                    teamList.get(pos).setAlerted(false);
                 }
 
             }
@@ -1314,95 +1319,114 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     }
 
-    private void doTheShit(String text) {
-        resetDrinkDialog();
-        textViewNameChoose.setText(text + " @ " + teamList.get(position2).getName());
 
+    private void doTheShit(String text, boolean test) {
+
+
+        textViewNameChoose.setText(text + " @ " + teamList.get(position2).getName());
         textViewAmountDrink.setText(DRINKAMOUNT + amountToDrink + " cl");
         textViewGlueckwunsch.setText("Glückwunsch! Dies ist euer " + teamList.get(position2).getDrunkPlain() + ". Schnaps!");
 
-        getRandomDrink();
-        oldDrink = drink;
-        Log.d("drink", "drink initial" + drink);
+
 
 
         dialogChooseDrink.show();
         final Button buttonOK = (Button) dialogDrinkAccepted.findViewById(R.id.buttonDrinkOk);
         final Button buttonCancel = (Button) dialogDrinkAccepted.findViewById(R.id.buttonDrinkCancel);
 
-        imageViewDrink1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (drink == 0) {
-                    dialogDrinkAccepted.show();
-                    buttonOK.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            //Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
-                            dialogDrinkAccepted.dismiss();
-                            winnerDrink = 1;
-                            finishDialogChooseDrink(position2);
-                        }
-                    });
-                    buttonCancel.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            dialogDrinkAccepted.dismiss();
-                        }
-                    });
+        if(test){
 
+            buttonRandomDrink.setText("Ausschank");
+            buttonRandomDrink.setEnabled(true);
+            buttonRandomDrink.setClickable(true);
+            buttonRandomDrink.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    finishDialogChooseDrink(position2);
                 }
-            }
-        });
+            });
+        }else{
+            resetDrinkDialog();
+            getRandomDrink();
+            oldDrink = drink;
+            Log.d("drink", "drink initial" + drink);
+            imageViewDrink1.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (drink == 0) {
+                        dialogDrinkAccepted.show();
+                        buttonOK.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                //Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
+                                dialogDrinkAccepted.dismiss();
+                                winnerDrink = 1;
+                                finishDialogChooseDrink(position2);
+                            }
+                        });
+                        buttonCancel.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                dialogDrinkAccepted.dismiss();
+                            }
+                        });
 
-        imageViewDrink2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (drink == 1) {
-                    dialogDrinkAccepted.show();
-                    buttonOK.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            //Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
-                            dialogDrinkAccepted.dismiss();
-                            winnerDrink = 2;
-                            finishDialogChooseDrink(position2);
-                        }
-                    });
-                    buttonCancel.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            dialogDrinkAccepted.dismiss();
-
-                        }
-                    });
+                    }
                 }
-            }
-        });
+            });
 
-        imageViewDrink3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (drink == 2) {
-                    dialogDrinkAccepted.show();
-                    buttonOK.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            //Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
-                            dialogDrinkAccepted.dismiss();
-                            winnerDrink = 3;
-                            finishDialogChooseDrink(position2);
-                        }
-                    });
-                    buttonCancel.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            dialogDrinkAccepted.dismiss();
-                        }
-                    });
+            imageViewDrink2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (drink == 1) {
+                        dialogDrinkAccepted.show();
+                        buttonOK.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                //Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
+                                dialogDrinkAccepted.dismiss();
+                                winnerDrink = 2;
+                                finishDialogChooseDrink(position2);
+                            }
+                        });
+                        buttonCancel.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                dialogDrinkAccepted.dismiss();
+
+                            }
+                        });
+                    }
                 }
-            }
-        });
+            });
+
+            imageViewDrink3.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (drink == 2) {
+                        dialogDrinkAccepted.show();
+                        buttonOK.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                //Toast.makeText(getApplicationContext(), "Prost!", Toast.LENGTH_SHORT).show ();
+                                dialogDrinkAccepted.dismiss();
+                                winnerDrink = 3;
+                                finishDialogChooseDrink(position2);
+                            }
+                        });
+                        buttonCancel.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                dialogDrinkAccepted.dismiss();
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+
+
 
 
     }
@@ -1495,8 +1519,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
     private void alarmTeam() {
-        final int delay3 = 12000;
-
+        final int delay3 = new Random().nextInt(maxVal - minVal + 1) + minVal;
+        Log.e("RANDOM","" + delay3);
         hAlert.postDelayed(new Runnable() {
             @Override
             public void run() {

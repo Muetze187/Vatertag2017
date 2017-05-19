@@ -46,6 +46,7 @@ import static com.helfholz.muetze187.vatertag2017.MainActivity.alertOn;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.empfangen;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.isOneAlarmed;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.msg;
+import static com.helfholz.muetze187.vatertag2017.MainActivity.sameDrinkTeam;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.teamList;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.listViewTeams;
 
@@ -55,7 +56,7 @@ public class BlauzahnActivity extends AppCompatActivity {
     Button btOn, btOff, btDisconnect, btDrink1, btDrink2, btDrink3, btShowList, btSaveTeams, btLoadTeams;
     Button btCheckAntrieb;
     static Button btCheckArduino;
-    static Switch switchAlarm;
+    static Switch switchAlarm, switchSameDrinkTeam;
 
     static TextView textViewinfo ;
     static ArrayAdapter<String> btArrayAdapter;
@@ -96,7 +97,9 @@ public class BlauzahnActivity extends AppCompatActivity {
         btSaveTeams = (Button) findViewById(R.id.buttonWartungSpeichern);
         btLoadTeams = (Button) findViewById(R.id.buttonWartungLaden);
         switchAlarm = (Switch) findViewById(R.id.switchWartungToggleAlarm);
+        switchSameDrinkTeam = (Switch) findViewById(R.id.switchWartungToggleDrinkTeam);
         switchAlarm.setChecked(alertOn);
+        switchSameDrinkTeam.setChecked(sameDrinkTeam);
         listViewDevices = (ListView) findViewById(R.id.listViewBondedDevices);
         textViewinfo = (TextView) findViewById(R.id.textViewWartungBTinfo);
         checkBTstate = new Handler();
@@ -237,6 +240,19 @@ public class BlauzahnActivity extends AppCompatActivity {
                    alertOn = true;
                    switchAlarm.setChecked(true);
                }
+            }
+        });
+
+        switchSameDrinkTeam.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(sameDrinkTeam){
+                    sameDrinkTeam = false;
+                    switchSameDrinkTeam.setChecked(false);
+                }else{
+                    sameDrinkTeam = true;
+                    switchSameDrinkTeam.setChecked(true);
+                }
             }
         });
 
