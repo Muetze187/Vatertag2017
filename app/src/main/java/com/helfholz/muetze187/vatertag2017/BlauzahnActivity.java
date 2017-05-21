@@ -15,6 +15,8 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,10 +24,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -33,10 +38,14 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.wx.wheelview.adapter.ArrayWheelAdapter;
+import com.wx.wheelview.widget.WheelView;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 
 import static com.helfholz.muetze187.vatertag2017.BluetoothHandler.blReceiver;
@@ -45,6 +54,8 @@ import static com.helfholz.muetze187.vatertag2017.MainActivity.adapterTeamList;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.alertOn;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.empfangen;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.isOneAlarmed;
+import static com.helfholz.muetze187.vatertag2017.MainActivity.maxVal;
+import static com.helfholz.muetze187.vatertag2017.MainActivity.minVal;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.msg;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.sameDrinkTeam;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.teamList;
@@ -57,7 +68,7 @@ public class BlauzahnActivity extends AppCompatActivity {
     Button btCheckAntrieb;
     static Button btCheckArduino;
     static Switch switchAlarm, switchSameDrinkTeam;
-
+    WheelView wheelView;
     static TextView textViewinfo ;
     static ArrayAdapter<String> btArrayAdapter;
     Set<BluetoothDevice> pairedDevices;
@@ -67,7 +78,8 @@ public class BlauzahnActivity extends AppCompatActivity {
     private static BluetoothHandler handlerBTBlau;
     Handler checkBTstate;
     static IntentFilter filterBlauZahn;
-
+    LinearLayout dummie;
+    EditText editTextMinAlarm, editTextMaxAlarm;
 
 
 
@@ -103,6 +115,53 @@ public class BlauzahnActivity extends AppCompatActivity {
         listViewDevices = (ListView) findViewById(R.id.listViewBondedDevices);
         textViewinfo = (TextView) findViewById(R.id.textViewWartungBTinfo);
         checkBTstate = new Handler();
+
+        dummie = (LinearLayout)findViewById(R.id.dummy_id);
+        dummie.requestFocus();
+        editTextMinAlarm = (EditText) findViewById(R.id.editTextWartungMinAlarm);
+        editTextMaxAlarm = (EditText) findViewById(R.id.editTextWartungMaxAlarm);
+
+        editTextMinAlarm.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(editTextMinAlarm.getText().toString().equals(""))
+                {
+
+                }else
+                minVal = TimeUnit.MINUTES.toMillis(Integer.parseInt(editTextMinAlarm.getText().toString()));
+            }
+        });
+
+        editTextMaxAlarm.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(editTextMaxAlarm.getText().toString().equals(""))
+                {
+
+                }else
+                     maxVal = TimeUnit.MINUTES.toMillis(Integer.parseInt(editTextMaxAlarm.getText().toString()));
+            }
+        });
 
         dialogSaveTeams =new Dialog(BlauzahnActivity.this);
         dialogSaveTeams.setContentView(R.layout.save_teams);
@@ -285,8 +344,9 @@ public class BlauzahnActivity extends AppCompatActivity {
         btArrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         listViewDevices.setAdapter(btArrayAdapter);
 
-
     }
+
+
 
 
     private void listPairedDevices(){

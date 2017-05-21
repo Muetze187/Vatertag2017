@@ -222,10 +222,26 @@
         android:layout_height="wrap_content"
         android:id="@+id/search"
         android:hint="search music here"
+        android:inputType="text"
         android:layout_toRightOf="@+id/dividerMainInvisible"
         android:layout_above="@+id/dividerMainHorizontal"
         />
 
+    <ImageButton
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_toRightOf="@id/search"
+        android:layout_alignBottom="@id/search"
+        android:id="@+id/cancelSearch"
+        android:background="@drawable/xsign"
+        />
+    <LinearLayout
+        android:id="@+id/dummy_id2"
+        android:orientation="vertical"
+        android:layout_width="0px"
+        android:layout_height="0px"
+        android:focusable="true"
+        android:focusableInTouchMode="true" />
 
 
 </RelativeLayout>

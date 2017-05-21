@@ -42,6 +42,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -50,12 +51,14 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.formats.NativeAd;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -74,6 +77,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.vision.text.Text;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.wx.wheelview.adapter.ArrayWheelAdapter;
+import com.wx.wheelview.widget.WheelView;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -93,13 +98,14 @@ import static com.helfholz.muetze187.vatertag2017.BlauzahnActivity.textViewinfo;
 public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener, MediaPlayer.OnCompletionListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     //Gui Elements
+    LinearLayout dummie;
     boolean successBT = false;
     static boolean alertOn = true;
     static boolean sameDrinkTeam = false;
     static boolean isOneAlarmed = false;
     static String msg = "";
-    static int maxVal = 900000;
-    static  int minVal = 300000;
+    static long maxVal = 900000L;
+    static  long minVal = 300000L;
     Switch switchAlarm;
     TextView textViewDateTime;
     static TextView textFett;
@@ -132,6 +138,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     ArrayList<String> musicTest = new ArrayList<String>();
 
     ImageButton play, prev, forw, shuffle, repeat;
+    ImageButton cancelSearch;
     static SeekBar seekBarMusic;
     final int delay = 1000;
     int delay2 = 2000;
@@ -223,7 +230,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         super.onCreate(savedInstanceState);
         //hide statusbar
         hideStatusBar();
-
         //set layout
         setContentView(R.layout.activity_main);
 
@@ -246,7 +252,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         textViewSong = (TextView) findViewById(R.id.textViewSong);
         textViewSong.setText("no song selected");
 
-
+        dummie = (LinearLayout) findViewById(R.id.dummy_id2);
 
         adelheid = (TextView) findViewById(R.id.textView2);
         play = (ImageButton) findViewById(R.id.play);
@@ -257,6 +263,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         listViewTeams = (ListView) findViewById(R.id.listViewTeams);
         listViewMusic = (ListView) findViewById(R.id.listViewMusic);
         listViewSearch = (ListView) findViewById(R.id.listViewSearch);
+        listViewSearch.setBackgroundColor(Color.WHITE);
         listViewSearch.setVisibility(View.INVISIBLE);
         isStarted = false;
         fromIntent = false;
@@ -265,6 +272,25 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         getListData();
         animShake = AnimationUtils.loadAnimation(MainActivity.this, R.anim.shake);
 
+        cancelSearch = (ImageButton) findViewById(R.id.cancelSearch);
+        cancelSearch.setVisibility(View.INVISIBLE);
+
+        cancelSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(listViewSearch.getVisibility() == View.VISIBLE){
+                    listViewSearch.setVisibility(View.INVISIBLE);
+                }
+                cancelSearch.setVisibility(View.INVISIBLE);
+                dummie.requestFocus();
+                editTextSearch.setText("");
+                InputMethodManager inputManager = (InputMethodManager)
+                        getSystemService(Context.INPUT_METHOD_SERVICE);
+
+                inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
+                        InputMethodManager.HIDE_NOT_ALWAYS);
+            }
+        });
 
         //for (String a : music) {
          //   musicTrimmed.add(a.substring(25));
@@ -519,10 +545,12 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 if(editTextSearch.getText().toString().equals("")){
                     listViewSearch.setVisibility(View.INVISIBLE);
                     listViewMusic.setVisibility(View.VISIBLE);
+                    cancelSearch.setVisibility(View.INVISIBLE);
                 }
                 else{
                     listViewSearch.setVisibility(View.VISIBLE);
                     listViewMusic.setVisibility(View.INVISIBLE);
+                    cancelSearch.setVisibility(View.VISIBLE);
                 }
 
                 MainActivity.this.musicList.getFilter().filter(s);
@@ -732,8 +760,12 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 Log.e("WÄSCHE",""+file.getName());
                 try {
                     playSong("/storage/emulated/0/Music" +file.getAbsolutePath());
+                    play.setBackgroundResource(R.drawable.pausecircularbutton);
+                    isStarted = true;
                 } catch (IOException e) {
                     e.printStackTrace();
+                    isStarted = false;
+                    play.setBackgroundResource(R.drawable.playcircularbutton);
                 }
 
             }
@@ -751,8 +783,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 }else{
 
                     fileName = file.getName();
-                    isStarted = true;
-                    play.setBackgroundResource(R.drawable.pausecircularbutton);
                     for (int j = 0; j < music.size(); j++) {
                         String tmp = music.get(j).toString();
                         if (tmp.contains(fileName)) {
@@ -764,13 +794,15 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         //playSong(file.getAbsolutePath());
                         playSong(file.getAbsolutePath());
                         textViewSong.setText(musicTrimmed.get(currentSong));
-
-
+                        isStarted = true;
+                        play.setBackgroundResource(R.drawable.pausecircularbutton);
                         //mainAtivity.playSong(file.getName() +".mp3");
                         //mainActivity.isStarted = true;
 
                     } catch (IOException e) {
                         e.printStackTrace();
+                        play.setBackgroundResource(R.drawable.playcircularbutton);
+                        isStarted = false;
                     }
                     // songIndex = i;
                     //Log.d("currentSong", "depp " + songIndex);
@@ -1519,7 +1551,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
     private void alarmTeam() {
-        final int delay3 = new Random().nextInt(maxVal - minVal + 1) + minVal;
+        final long delay3 = minVal + (long)(Math.random()*(maxVal - minVal));
         Log.e("RANDOM","" + delay3);
         hAlert.postDelayed(new Runnable() {
             @Override
@@ -1615,10 +1647,12 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
 
     protected void showTimeAndDate() {
+
         hTimeDate.postDelayed(new Runnable() {
             @Override
             public void run() {
                     Log.e("msg unne",msg);
+                //Random rand = new Random();
                 date = new Date();
                 s = dateFormat.format(date);
                 textViewDateTime.setText(s);
