@@ -87,6 +87,82 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:id="@+id/textViewWartungAusschankZeit"
+        android:text="Ausschankzeit:"
+        android:textSize="32sp"
+        android:layout_alignTop="@+id/dividerHorizontal1"
+        android:layout_alignEnd="@+id/textViewWartungMaxAlarm" />
+
+    <TextView
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:text="Tank 1"
+        android:textSize="12sp"
+        android:id="@+id/textViewWartungAusschankzeitTank1"
+        android:layout_below="@+id/textViewWartungAusschankZeit"
+        android:layout_alignTop="@+id/switchWartungToggleAlarm"
+        android:layout_toRightOf="@+id/switchWartungToggleAlarm"
+        />
+    <TextView
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:text="Tank 2"
+        android:textSize="12sp"
+        android:id="@+id/textViewWartungAusschankzeitTank2"
+        android:layout_below="@+id/textViewWartungAusschankZeit"
+        android:layout_alignTop="@+id/switchWartungToggleAlarm"
+        android:layout_toRightOf="@+id/textViewWartungAusschankzeitTank1"
+        />
+
+    <TextView
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:text="Tank 2"
+        android:textSize="12sp"
+        android:id="@+id/textViewWartungAusschankzeitTank3"
+        android:layout_below="@+id/textViewWartungAusschankZeit"
+        android:layout_alignTop="@+id/switchWartungToggleAlarm"
+        android:layout_toRightOf="@+id/textViewWartungAusschankzeitTank2"
+        />
+
+
+
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:id="@+id/editTextWartungAusschankZeitTank1"
+        android:layout_alignTop="@+id/switchWartungToggleDrinkTeam"
+        android:layout_below="@+id/textViewWartungAusschankZeit"
+        android:layout_alignLeft="@+id/textViewWartungAusschankzeitTank1"
+        />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:id="@+id/editTextWartungAusschankZeitTank2"
+        android:layout_alignTop="@+id/switchWartungToggleDrinkTeam"
+        android:layout_below="@+id/textViewWartungAusschankZeit"
+        android:layout_alignLeft="@+id/textViewWartungAusschankzeitTank2"
+        />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:id="@+id/editTextWartungAusschankZeitTank3"
+        android:layout_alignTop="@+id/switchWartungToggleDrinkTeam"
+        android:layout_below="@+id/textViewWartungAusschankZeit"
+        android:layout_alignLeft="@+id/textViewWartungAusschankzeitTank3"
+        />
+
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:id="@+id/textViewWartungBTinfo"
         android:layout_below="@+id/buttonWartungBTShowList"
         android:textSize="@dimen/textSizes"/>
@@ -193,22 +269,29 @@
         android:layout_below="@+id/textViewWartungTeams"
         android:layout_alignLeft="@+id/buttonWartungDrink3"
         android:layout_alignRight="@+id/buttonWartungDrink3"
-        android:layout_alignBottom="@+id/dividerHorizontal"
         android:id="@+id/switchWartungToggleAlarm"
         android:layout_marginLeft="4dp"
-        android:textSize="16sp"/>
+        android:textSize="14sp"/>
 
     <Switch
         android:text="Gleiche Drink off/on"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textViewWartungTeams"
-        android:layout_alignBottom="@+id/dividerHorizontal"
+        android:layout_below="@+id/switchWartungToggleAlarm"
+        android:layout_alignRight="@+id/buttonWartungDrink3"
         android:id="@+id/switchWartungToggleDrinkTeam"
-        android:layout_marginLeft="4dp"
-        android:layout_toRightOf="@+id/switchWartungToggleAlarm"
-        android:textSize="16sp"/>
+        android:layout_alignLeft="@+id/switchWartungToggleAlarm"
+        android:textSize="14sp"/>
 
+    <View
+        android:layout_width="1dp"
+        android:id="@+id/dividerVertival3"
+        android:layout_height="wrap_content"
+        android:background="@android:color/holo_blue_dark"
+        android:layout_toRightOf="@+id/switchWartungToggleAlarm"
+        android:layout_alignTop="@+id/dividerHorizontal1"
+        android:layout_alignBottom="@+id/dividerHorizontal"
+        />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -270,7 +353,7 @@
         android:id="@+id/editTextWartungMinAlarm"
         android:inputType="number"
         android:textSize="32sp"
-        android:text="5"/>
+        />
 
     <EditText
         android:layout_width="wrap_content"
@@ -280,7 +363,7 @@
         android:textSize="32sp"
         android:inputType="number"
         android:id="@+id/editTextWartungMaxAlarm"
-        android:text="15"/>
+        />
 
     <LinearLayout
         android:id="@+id/dummy_id"

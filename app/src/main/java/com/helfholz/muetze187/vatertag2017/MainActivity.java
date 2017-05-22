@@ -2,7 +2,6 @@ package com.helfholz.muetze187.vatertag2017;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -58,7 +57,6 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.ads.formats.NativeAd;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -74,14 +72,10 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.vision.text.Text;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.wx.wheelview.adapter.ArrayWheelAdapter;
-import com.wx.wheelview.widget.WheelView;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -104,9 +98,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     static boolean sameDrinkTeam = false;
     static boolean isOneAlarmed = false;
     static String msg = "";
-    static long maxVal = 900000L;
-    static  long minVal = 300000L;
-    Switch switchAlarm;
+    static long maxVal = 300000L;
+    static  long minVal = 50000L;
+    int randomTeamMember;
     TextView textViewDateTime;
     static TextView textFett;
     TextView adelheid;
@@ -125,9 +119,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     TextView textViewReceive;
     TextView textViewSong;
 
+    int dealy3;
+
     final String DRINKAMOUNT = "Zu trinkende Menge: ";
     int currentSong;
-    int currentPosition;
     static CustomListAdapter adapterTeamList;
     ArrayAdapter<String> adapterSpinner;
     static ArrayList<Teams> teamList = new ArrayList<Teams>();
@@ -136,16 +131,21 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     ArrayList<String> musicTrimmed = new ArrayList<String>();
     ArrayList<String> musicTrimmedSearch = new ArrayList<String>();
     ArrayList<String> musicTest = new ArrayList<String>();
+    ArrayList<String> musicTemp = new ArrayList<String>();
 
     ImageButton play, prev, forw, shuffle, repeat;
     ImageButton cancelSearch;
     static SeekBar seekBarMusic;
     final int delay = 1000;
     int delay2 = 2000;
+    static long delay3;
+    static int ausschankZeitTank1 = 400;
+    static int ausschankZeitTank2 = 400;
+    static int ausschankZeitTank3 = 400;
     Handler hTimeDate;
     static Handler hMusic;
     Handler hBlinzeln;
-    Handler hAlert;
+    static Handler hAlert;
     Handler checkBTstate;
     Handler checkIncoming;
     static boolean isStarted;
@@ -167,6 +167,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     int amountToDrink = 2;
     int progress;
     int counter = 0;
+    String member;
     int winnerDrink;
     SharedPreferences prefs;
     Gson gson;
@@ -205,12 +206,12 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     static IntentFilter filter;
     static String receivedMessage = "";
     int teamPos;
-    int originalVolume;
+    static int originalVolume;
     private SoundPool soundPool;
     int soundAlarm;
     int volume;
     int position2;
-    private String root = Environment.getExternalStorageDirectory().toString()+"/Music/" ;
+    private String root = "/storage/extSdCard/Music/" ;
     int zaehler = 0;
 
     @Override
@@ -270,6 +271,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         isShuffle = false;
         isRepeat = false;
         getListData();
+        delay3 = minVal + (long)(Math.random()*(maxVal - minVal));
         animShake = AnimationUtils.loadAnimation(MainActivity.this, R.anim.shake);
 
         cancelSearch = (ImageButton) findViewById(R.id.cancelSearch);
@@ -407,13 +409,13 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         buttonRandomDrink = (Button) dialogChooseDrink.findViewById(R.id.buttonRandom);
 
 
-        textViewDateTime.setOnClickListener(new View.OnClickListener() {
+        /*textViewDateTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 fadeOut();
             }
         });
-
+*/
 
         textFett.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -421,7 +423,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
                 Intent intent = new Intent(MainActivity.this, BlauzahnActivity.class);
                 startActivity(intent);
-
 
             }
         });
@@ -552,8 +553,16 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     listViewMusic.setVisibility(View.INVISIBLE);
                     cancelSearch.setVisibility(View.VISIBLE);
                 }
-
-                MainActivity.this.musicList.getFilter().filter(s);
+                //String tmp = editTextSearch.getText().toString();
+                //MainActivity.this.musicList.getFilter().filter(s);
+                s = s.toString().toLowerCase();
+                for(int i=0; i < musicTrimmedSearch.size(); i++){
+                    if(musicTrimmedSearch.get(i).toString().contains(s)){
+                        //musicTrimmedSearch.add(music.get(i).toString().substring(25));
+                         MainActivity.this.musicList.getFilter().filter(s);
+                    }
+                }
+                Log.e("S",""+s);
             }
 
             @Override
@@ -725,13 +734,26 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
                if(isShuffle){
                     isShuffle = false;
+                    music = musicTemp;
+                   Collections.sort(music);
+                   musicTrimmed.clear();
+                    for (String a : music) {
+                       musicTrimmed.add(a.substring(25));
+                    }
                     shuffle.setBackgroundResource(R.drawable.shuffle_big);
-                    Collections.sort(music);
+
+
                 }
                 else{
                     isShuffle = true;
+                    musicTemp = music;
+                    music = musicTest;
+                   Collections.shuffle(music);
+                   musicTrimmed.clear();
+                    for (String a : music) {
+                       musicTrimmed.add(a.substring(25));
+                    }
                     shuffle.setBackgroundResource(R.drawable.shufflebig_pushed_blue);
-                    Collections.shuffle(music);
                 }
 
                 Log.d("HELLO", String.valueOf(isShuffle));
@@ -756,6 +778,17 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 File file = new File((String) listViewSearch.getItemAtPosition(position));
+                if(isShuffle){
+                    isShuffle = false;
+                    music = musicTemp;
+                    Collections.sort(music);
+                    musicTrimmed.clear();
+                    for (String a : music) {
+                        musicTrimmed.add(a.substring(25));
+                    }
+                    shuffle.setBackgroundResource(R.drawable.shuffle_big);
+
+                }
                 textViewSong.setText(file.getName());
                 Log.e("WÄSCHE",""+file.getName());
                 try {
@@ -774,8 +807,19 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         listViewMusic.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int i, long id) {
-                File file = new File(path.get(i));
 
+                File file = new File(path.get(i));
+                if(isShuffle){
+                    isShuffle = false;
+                    music = musicTemp;
+                    Collections.sort(music);
+                    musicTrimmed.clear();
+                    for (String a : music) {
+                        musicTrimmed.add(a.substring(25));
+                    }
+                    shuffle.setBackgroundResource(R.drawable.shuffle_big);
+
+                }
 
                 if (file.isDirectory()) {
                     if (file.canRead())
@@ -809,6 +853,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 }
 
             }
+
         });
 
         listViewTeams.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -887,7 +932,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
                 });
                 if (teamList.get(position).getAlerted()) {
-                        doTheShit(teamList.get(position).getMemberOne(),false);
+                        doTheShit(getRandomTeamMember(position), false);
 
                 } else {
 
@@ -1278,10 +1323,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     imageViewDrink2.setColorFilter(Color.RED);
                     imageViewDrink3.setColorFilter(Color.RED);
                     if(amountToDrink == 2)
-                        handlerBT.sendBT("AS:1_2#");
+                        handlerBT.sendBT("AS:1_"+ ausschankZeitTank1 + "#");
                     else
-                        handlerBT.sendBT("AS:1_4#");
+                        handlerBT.sendBT("AS:1_" + ausschankZeitTank1 *2 +"#");
                     Log.e("drink 1 wird geschickt","" + amountToDrink + " cl");
+                    Log.e("Menge Tank1:", ""+(ausschankZeitTank1));
                     break;
                 case 2:
                     teamList.get(pos).setCounterTwo(teamList.get(pos).getCounterTwo() + 1);
@@ -1289,10 +1335,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     imageViewDrink2.setColorFilter(Color.GREEN);
                     imageViewDrink3.setColorFilter(Color.RED);
                     if(amountToDrink == 2)
-                        handlerBT.sendBT("AS:2_2#");
+                        handlerBT.sendBT("AS:2_" + ausschankZeitTank2 + "#");
                     else
-                        handlerBT.sendBT("AS:2_4#");
+                        handlerBT.sendBT("AS:2_" + ausschankZeitTank2 *2+"#");
                     Log.e("drink 2 wird geschickt","" + amountToDrink + " cl");
+                    Log.e("Menge Tank2", ""+(ausschankZeitTank2));
                     break;
                 case 3:
                     teamList.get(pos).setCounterThree(teamList.get(pos).getCounterThree() + 1);
@@ -1300,10 +1347,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     imageViewDrink2.setColorFilter(Color.RED);
                     imageViewDrink3.setColorFilter(Color.GREEN);
                     if(amountToDrink == 2)
-                        handlerBT.sendBT("AS:3_2#");
+                        handlerBT.sendBT("AS:3_"+ ausschankZeitTank3 +"#");
                     else
-                        handlerBT.sendBT("AS:3_4#");
+                        handlerBT.sendBT("AS:3_"+ ausschankZeitTank3 *2+"#");
                     Log.e("drink 3 wird geschickt","" + amountToDrink + " cl");
+                    Log.e("Menge Tank3", ""+(ausschankZeitTank3));
                     break;
 
         }
@@ -1321,17 +1369,49 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             @Override
             public void onFinish() {
                 if(zaehler == 0){
-                    if(sameDrinkTeam){
-                        doTheShit(teamList.get(pos).getMemberTwo(), true);
-                    }else{
-                        doTheShit(teamList.get(pos).getMemberTwo(), false);
+                    if(member.equals(teamList.get(pos).getMemberOne())){
+                        if(sameDrinkTeam){
+                            doTheShit(teamList.get(pos).getMemberTwo(), true);
+                        }else{
+                            doTheShit(teamList.get(pos).getMemberTwo(), false);
+                        }
+                    }
+                    if(member.equals(teamList.get(pos).getMemberTwo())){
+                        if(sameDrinkTeam){
+                            doTheShit(teamList.get(pos).getMemberOne(), true);
+                        }else{
+                            doTheShit(teamList.get(pos).getMemberOne(), false);
+                        }
+                    }
+                    if(member.equals(teamList.get(pos).getMemberThree())){
+                        if(sameDrinkTeam){
+                            doTheShit(teamList.get(pos).getMemberOne(), true);
+                        }else{
+                            doTheShit(teamList.get(pos).getMemberOne(), false);
+                        }
                     }
                     zaehler++;
                 } else if(zaehler == 1 && teamList.get(pos).getHasThreeMembers()){
-                    if(sameDrinkTeam){
-                        doTheShit(teamList.get(pos).getMemberThree(), true);
-                    }else{
-                        doTheShit(teamList.get(pos).getMemberThree(), false);
+                    if(member.equals(teamList.get(pos).getMemberOne())){
+                        if(sameDrinkTeam){
+                            doTheShit(teamList.get(pos).getMemberTwo(), true);
+                        }else{
+                            doTheShit(teamList.get(pos).getMemberTwo(), false);
+                        }
+                    }
+                    if(member.equals(teamList.get(pos).getMemberTwo())){
+                        if(sameDrinkTeam){
+                            doTheShit(teamList.get(pos).getMemberThree(), true);
+                        }else{
+                            doTheShit(teamList.get(pos).getMemberThree(), false);
+                        }
+                    }
+                    if(member.equals(teamList.get(pos).getMemberThree())){
+                        if(sameDrinkTeam){
+                            doTheShit(teamList.get(pos).getMemberOne(), true);
+                        }else{
+                            doTheShit(teamList.get(pos).getMemberOne(), false);
+                        }
                     }
                     zaehler++;
                 }else{
@@ -1341,6 +1421,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     amountToDrink = 2;
                     adapterTeamList.notifyDataSetChanged();
                     teamList.get(pos).setAlerted(false);
+                    //fadeIn();
                 }
 
             }
@@ -1550,9 +1631,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         }, delay2);
     }
 
-    private void alarmTeam() {
-        final long delay3 = minVal + (long)(Math.random()*(maxVal - minVal));
-        Log.e("RANDOM","" + delay3);
+    public static void alarmTeam() {
+        //delay3 = minVal + (long)(Math.random()*(maxVal - minVal));
         hAlert.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -1561,7 +1641,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     final int alert = rand.nextInt(teamList.size());
                     toggleAlert(alert);
                 }
-
+                Log.e("RANDOM","" + delay3);
                 hAlert.postDelayed(this, delay3);
 
             }
@@ -1651,7 +1731,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         hTimeDate.postDelayed(new Runnable() {
             @Override
             public void run() {
-                    Log.e("msg unne",msg);
+                    //Log.e("RANDOM SEK", ""+(delay3))
                 //Random rand = new Random();
                 date = new Date();
                 s = dateFormat.format(date);
@@ -1683,41 +1763,14 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
 
-    private void toggleAlert(int posList) {
+    private static void toggleAlert(int posList) {
 
 
             teamList.get(posList).setAlerted(true);
             isOneAlarmed = true;
-            //handlerBT.sendBT("ALARM#");
+            handlerBT.sendBT("ALARM#");
+            delay3 = minVal + (long)(Math.random()*(maxVal - minVal));
             //fadeOut();
-          /*  if (teamList.get(posList).getAlerted()) {
-                teamList.get(posList).setAlerted(false);
-                Collections.sort(teamList, Teams.teamsComparator);
-            } else {
-                teamList.get(posList).setAlerted(true);
-                 mp.start();
-
-            }*/
-
-//            try {
-//                Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-//                Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
-//                r.play();
-//                while(r.isPlaying()){
-//
-//                }
-//                fadeIn();
-//
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-            //mp.start(); //TODO soundpool
-            soundPool.play(soundAlarm, volume ,volume,1,0,1f);
-
-
-
-            //fadeIn();
-
             Collections.sort(teamList, Teams.teamsComparator);
             adapterTeamList.notifyDataSetChanged();
 
@@ -2081,6 +2134,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        dummie.requestFocus();
         //this.unregisterReceiver(mReceiver);
         // TODO music kracht!
     }
@@ -2119,7 +2173,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     };
 
 
-    private void fadeOut(){
+    private static void fadeOut(){
 
         int targetVol = 2;
         int STEP_DOWN = 1;
@@ -2140,7 +2194,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     }
 
-    private void fadeIn(){
+    private static void fadeIn(){
 
         int curVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         int STEP_UP = 1;
@@ -2209,10 +2263,32 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         for (String a : music) {
            musicTrimmed.add(a.substring(25));
         }
-
+        Collections.sort(music);
         fileList = new ArrayAdapter<String>(this, R.layout.spinner_item, item);
         listViewMusic.setAdapter(fileList);
 
+
+    }
+
+    private String getRandomTeamMember(int position){
+
+        randomTeamMember = (int)((Math.random()) * 6 + 1);
+        switch(randomTeamMember){
+            case 1:
+                member = teamList.get(position).getMemberOne();
+                break;
+            case 2:
+                member = teamList.get(position).getMemberTwo();
+                break;
+            case 3:
+                if(teamList.get(position).getHasThreeMembers()){
+                    member = teamList.get(position).getMemberThree();
+                }else{
+                    getRandomTeamMember(position);
+                }
+
+        }
+        return member;
 
     }
 

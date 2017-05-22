@@ -148,6 +148,7 @@ public class BluetoothHandler extends Application{
             if (getIsConnected()) {
                 textViewinfo.setText("Bereits verbunden");
             } else {
+                textViewinfo.setText("Verbinde...");
                 setMac_adresse(adress);
                 socket = getSocket();
                 btAdapter.cancelDiscovery();
@@ -159,7 +160,9 @@ public class BluetoothHandler extends Application{
                                 socket.connect();
                                 if(socket.isConnected())
                                     setIs_connected(true);
+                                    textViewinfo.setText("Verbunden");
                             } catch (IOException e) {
+                                textViewinfo.setText("Fehler - Abruch");
                                 e.printStackTrace();
                                 setIs_connected(false);
                             }
@@ -178,6 +181,7 @@ public class BluetoothHandler extends Application{
                 if (!getIsConnected()) {
                     try {
                         socket.close();
+                        textViewinfo.setText("Nicht verbunden");
                     } catch (IOException e) {
                         // textViewinfo.setText("Socket kann nicht geschlossen werden");
                         e.printStackTrace();

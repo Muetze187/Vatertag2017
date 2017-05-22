@@ -1,6 +1,5 @@
 package com.helfholz.muetze187.vatertag2017;
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -13,18 +12,11 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -38,25 +30,26 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.wx.wheelview.adapter.ArrayWheelAdapter;
-import com.wx.wheelview.widget.WheelView;
+
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 
 import static com.helfholz.muetze187.vatertag2017.BluetoothHandler.blReceiver;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.adapterTeamList;
+import static com.helfholz.muetze187.vatertag2017.MainActivity.alarmTeam;
+import static com.helfholz.muetze187.vatertag2017.MainActivity.ausschankZeitTank1;
+import static com.helfholz.muetze187.vatertag2017.MainActivity.ausschankZeitTank2;
+import static com.helfholz.muetze187.vatertag2017.MainActivity.ausschankZeitTank3;
+import static com.helfholz.muetze187.vatertag2017.MainActivity.delay3;
 
 import static com.helfholz.muetze187.vatertag2017.MainActivity.alertOn;
-import static com.helfholz.muetze187.vatertag2017.MainActivity.empfangen;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.isOneAlarmed;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.maxVal;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.minVal;
-import static com.helfholz.muetze187.vatertag2017.MainActivity.msg;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.sameDrinkTeam;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.teamList;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.listViewTeams;
@@ -68,7 +61,7 @@ public class BlauzahnActivity extends AppCompatActivity {
     Button btCheckAntrieb;
     static Button btCheckArduino;
     static Switch switchAlarm, switchSameDrinkTeam;
-    WheelView wheelView;
+
     static TextView textViewinfo ;
     static ArrayAdapter<String> btArrayAdapter;
     Set<BluetoothDevice> pairedDevices;
@@ -79,7 +72,7 @@ public class BlauzahnActivity extends AppCompatActivity {
     Handler checkBTstate;
     static IntentFilter filterBlauZahn;
     LinearLayout dummie;
-    EditText editTextMinAlarm, editTextMaxAlarm;
+    EditText editTextMinAlarm, editTextMaxAlarm, editTextAusschankZeitTank1, editTextAusschankZeitTank2, editTextAusschankZeitTank3;
 
 
 
@@ -119,7 +112,81 @@ public class BlauzahnActivity extends AppCompatActivity {
         dummie = (LinearLayout)findViewById(R.id.dummy_id);
         dummie.requestFocus();
         editTextMinAlarm = (EditText) findViewById(R.id.editTextWartungMinAlarm);
+        editTextMinAlarm.setText(""+TimeUnit.MILLISECONDS.toMinutes(minVal));
         editTextMaxAlarm = (EditText) findViewById(R.id.editTextWartungMaxAlarm);
+        editTextMaxAlarm.setText(""+TimeUnit.MILLISECONDS.toMinutes(maxVal));
+        editTextAusschankZeitTank1 = (EditText) findViewById(R.id.editTextWartungAusschankZeitTank1);
+        editTextAusschankZeitTank1.setText(""+ ausschankZeitTank1);
+        editTextAusschankZeitTank2 = (EditText) findViewById(R.id.editTextWartungAusschankZeitTank2);
+        editTextAusschankZeitTank2.setText(""+ausschankZeitTank2);
+        editTextAusschankZeitTank3 = (EditText) findViewById(R.id.editTextWartungAusschankZeitTank3);
+        editTextAusschankZeitTank3.setText(""+ausschankZeitTank3);
+
+        editTextAusschankZeitTank1.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if(editTextAusschankZeitTank1.getText().toString().equals("")){
+
+                }else{
+                    ausschankZeitTank1 = Integer.parseInt(editTextAusschankZeitTank1.getText().toString());
+                    textViewinfo.setText("Ausschankzeit Tank1: " + "\n" + ausschankZeitTank1);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        editTextAusschankZeitTank2.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if(editTextAusschankZeitTank2.getText().toString().equals("")){
+
+                }else{
+                    ausschankZeitTank2 = Integer.parseInt(editTextAusschankZeitTank2.getText().toString());
+                    textViewinfo.setText("Ausschankzeit Tank2: " + "\n" + ausschankZeitTank2);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        editTextAusschankZeitTank3.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if(editTextAusschankZeitTank3.getText().toString().equals("")){
+
+                }else{
+                    ausschankZeitTank3 = Integer.parseInt(editTextAusschankZeitTank3.getText().toString());
+                    textViewinfo.setText("Ausschankzeit Tank3: " + "\n" + ausschankZeitTank3);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
 
         editTextMinAlarm.addTextChangedListener(new TextWatcher() {
             @Override
@@ -129,16 +196,21 @@ public class BlauzahnActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if(editTextMinAlarm.getText().toString().equals(""))
+                {
 
+                }else{
+                    minVal = TimeUnit.MINUTES.toMillis(Integer.parseInt(editTextMinAlarm.getText().toString()));
+                    delay3 = minVal + (long)(Math.random()*(maxVal - minVal));
+                    //alarmTeam();
+                    textViewinfo.setText("Min. Alarmierung: " + "\n" + minVal);
+                }
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-                if(editTextMinAlarm.getText().toString().equals(""))
-                {
 
-                }else
-                minVal = TimeUnit.MINUTES.toMillis(Integer.parseInt(editTextMinAlarm.getText().toString()));
+
             }
         });
 
@@ -150,16 +222,21 @@ public class BlauzahnActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if(editTextMaxAlarm.getText().toString().equals(""))
+                {
 
+                }else{
+                    maxVal = TimeUnit.MINUTES.toMillis(Integer.parseInt(editTextMaxAlarm.getText().toString()));
+                    delay3 = minVal + (long)(Math.random()*(maxVal - minVal));
+                    //alarmTeam();
+                    textViewinfo.setText("Max. Alarmierung: " + "\n" + maxVal);
+                }
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-                if(editTextMaxAlarm.getText().toString().equals(""))
-                {
 
-                }else
-                     maxVal = TimeUnit.MINUTES.toMillis(Integer.parseInt(editTextMaxAlarm.getText().toString()));
+
             }
         });
 
@@ -209,6 +286,7 @@ public class BlauzahnActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                handlerBTBlau.disconnectBT();
+                textViewinfo.setText("Disconnected");
 
             }
         });
@@ -216,7 +294,7 @@ public class BlauzahnActivity extends AppCompatActivity {
         btDrink1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                handlerBTBlau.sendBT("AS:1_2#");
+                handlerBTBlau.sendBT("AS:1_"+ ausschankZeitTank1 +"#");
 
 
 
@@ -226,7 +304,7 @@ public class BlauzahnActivity extends AppCompatActivity {
         btDrink2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                handlerBTBlau.sendBT("AS:2_2#");
+                handlerBTBlau.sendBT("AS:2_"+ ausschankZeitTank2 +"#");
 
             }
         });
@@ -234,7 +312,7 @@ public class BlauzahnActivity extends AppCompatActivity {
         btDrink3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                handlerBTBlau.sendBT("AS:3_2#");
+                handlerBTBlau.sendBT("AS:3_"+ ausschankZeitTank3 +"#");
 
             }
         });
@@ -439,8 +517,10 @@ public class BlauzahnActivity extends AppCompatActivity {
         editor.putString("Teams", json);
         editor.commit();
         Toast.makeText(this, "Teams erfolgreich gespeichert", Toast.LENGTH_SHORT).show ();
-        for(int i = 0; i < teamList.size(); i++)
-            Log.d("saved ", "teams " + teamList.get(i).getName() +"JSON: " + json);
+        for(int i = 0; i < teamList.size(); i++) {
+            Log.d("saved ", "teams " + teamList.get(i).getName() + "JSON: " + json);
+        }
+        textViewinfo.setText("Teams gespeichert!");
     }
 
     private void loadTeams(){
@@ -455,7 +535,7 @@ public class BlauzahnActivity extends AppCompatActivity {
         Log.d("teamListLoad", "TeamList " +teamList.size()+ " JSON " + json);
         //teamList = tmp;
         adapterTeamList = new CustomListAdapter(BlauzahnActivity.this, teamList);
-
+        textViewinfo.setText("Teams geladen!");
         listViewTeams.setAdapter(adapterTeamList);
         adapterTeamList.notifyDataSetChanged();
     }
@@ -482,11 +562,13 @@ public class BlauzahnActivity extends AppCompatActivity {
                 //Device is about to disconnect
                 handlerBTBlau.setIs_connected(false);
                 btCheckArduino.setBackgroundColor(Color.RED);
+                textViewinfo.setText("Verbindungsfehler!" + "\n" + "Disconnected" );
             }
             else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                 //Device has disconnected
                 handlerBTBlau.setIs_connected(false);
                 btCheckArduino.setBackgroundColor(Color.RED);
+                textViewinfo.setText("Verbindungsfehler!" + "\n" + "Disconnected" );
             }
         }
     };
