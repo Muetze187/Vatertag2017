@@ -84,6 +84,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Random;
 import java.util.TimeZone;
 
@@ -553,16 +554,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     listViewMusic.setVisibility(View.INVISIBLE);
                     cancelSearch.setVisibility(View.VISIBLE);
                 }
-                //String tmp = editTextSearch.getText().toString();
+                String text = editTextSearch.getText().toString().toLowerCase(Locale.getDefault());
+                filter(text);
                 //MainActivity.this.musicList.getFilter().filter(s);
-                s = s.toString().toLowerCase();
-                for(int i=0; i < musicTrimmedSearch.size(); i++){
-                    if(musicTrimmedSearch.get(i).toString().contains(s)){
-                        //musicTrimmedSearch.add(music.get(i).toString().substring(25));
-                         MainActivity.this.musicList.getFilter().filter(s);
-                    }
-                }
-                Log.e("S",""+s);
+
             }
 
             @Override
@@ -2308,6 +2303,28 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         }
         return member;
 
+    }
+
+
+    public void filter(String charText) {
+        charText = charText.toLowerCase(Locale.getDefault());
+        musicTrimmedSearch.clear();
+        if (charText.length() == 0) {
+            for (String a : musicTest) {
+                musicTrimmedSearch.add(a.substring(25));
+            }
+        }
+        else
+        {
+            for (String s : musicTest)
+            {
+                if (s.toLowerCase(Locale.getDefault()).contains(charText))
+                {
+                    musicTrimmedSearch.add(s.substring(25));
+                }
+            }
+        }
+        musicList.notifyDataSetChanged();
     }
 
 }
