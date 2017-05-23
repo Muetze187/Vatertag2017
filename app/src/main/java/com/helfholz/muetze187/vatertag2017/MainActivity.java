@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -22,15 +21,11 @@ import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.net.Uri;
 import android.os.CountDownTimer;
-import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.multidex.MultiDex;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -46,32 +41,18 @@ import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SeekBar;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.UiSettings;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -90,7 +71,7 @@ import java.util.TimeZone;
 
 import static com.helfholz.muetze187.vatertag2017.BlauzahnActivity.textViewinfo;
 
-public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener, MediaPlayer.OnCompletionListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener, MediaPlayer.OnCompletionListener { //, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener TODO MAPS
 
     //Gui Elements
     LinearLayout dummie;
@@ -115,7 +96,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     TextView textViewAmountDrink;
     TextView textViewGlueckwunsch;
     TextView textViewNameChoose;
-    TextView distanceMarkers;
+    TextView textViewAnzahlSchnaps;
+    TextView textViewAnzahlAlarmierungen;
     EditText editTextSearch;
     TextView textViewReceive;
     TextView textViewSong;
@@ -184,17 +166,18 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     Dialog dialogBT;
     ImageView imageViewPigOpenEyes, imageViewPigClosedEyes;
     ImageView imageViewDrink1, imageViewDrink2, imageViewDrink3;
+    ImageView imageViewPictureOpenEyes, imageViewPictureClosedEyes;
     private float x1, x2;
     static final int MIN_DISTANCE = 150;
     public static AudioManager audioManager;
-    private GoogleApiClient mGoogleApiClient;
+    //private GoogleApiClient mGoogleApiClient;
     private LocationManager locationManager;
     Marker markerGoal, markerStart;
     Location mLastLocation;
     LocationRequest locationRequest;
     private GoogleMap mMap;
     boolean mapCentered = false;
-    private Switch switchMap;
+    //private Switch switchMap;
     private Thread.UncaughtExceptionHandler defaultUEH;
     private Animation animShake;
     Thread thread, threadReceive;
@@ -212,6 +195,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     int soundAlarm;
     int volume;
     int position2;
+    int schnaps = 0;
+    static int alarmierungen = 0;
     private String root = "/storage/extSdCard/Music/" ;
     int zaehler = 0;
 
@@ -238,9 +223,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         //force landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         //Maps
-        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-
+        /*MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this); TODO MAPS
+*/
         filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
@@ -249,7 +234,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         //init GUI
         textViewDateTime = (TextView) findViewById(R.id.textViewDateTime);
         textFett = (TextView) findViewById(R.id.textViewFett);
-        distanceMarkers = (TextView) findViewById(R.id.textViewDistance);
+        //distanceMarkers = (TextView) findViewById(R.id.textViewDistance);
 
         textViewSong = (TextView) findViewById(R.id.textViewSong);
         textViewSong.setText("no song selected");
@@ -302,10 +287,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
         //TESTS
         //spinner = (Spinner) findViewById(R.id.spinner);
-        adapterSpinner = new ArrayAdapter<String>(this,
+        /*adapterSpinner = new ArrayAdapter<String>(this,
                 R.layout.spinner_item, musicTrimmed);
         adapterSpinner.setDropDownViewResource(R.layout.spinner_item);
-
+*/
 
         //spinner.setAdapter(adapterSpinner);
         //helps but depricated
@@ -360,7 +345,13 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         imageViewDrink1 = (ImageView) dialogChooseDrink.findViewById(R.id.imageViewChooseDrink1);
         imageViewDrink2 = (ImageView) dialogChooseDrink.findViewById(R.id.imageViewChooseDrink2);
         imageViewDrink3 = (ImageView) dialogChooseDrink.findViewById(R.id.imageViewChooseDrink3);
+        imageViewPictureOpenEyes = (ImageView) findViewById(R.id.map);
+        imageViewPictureOpenEyes.setBackgroundResource(R.drawable.schwein_big);
+        imageViewPictureClosedEyes = (ImageView) findViewById(R.id.map2);
+        imageViewPictureClosedEyes.setBackgroundResource(R.drawable.schwein_big_closedeyes);
 
+        textViewAnzahlAlarmierungen = (TextView) findViewById(R.id.textViewMengeAlarmierungenAnzahl);
+        textViewAnzahlSchnaps = (TextView) findViewById(R.id.textViewMengeSchnapsAnzahl);
 
         progress = 0;
 
@@ -429,7 +420,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         });
 
 
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        /*locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -533,7 +524,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     mapCentered = false;
                 }
             }
-        });
+TODOMAPS        });*/
         //TESTS
 
         editTextSearch.addTextChangedListener(new TextWatcher() {
@@ -601,7 +592,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             @Override
             public void onClick(View view) {
 
-                if(!isStarted){
+                if(!isStarted || music.isEmpty()){
 
                 }
                 else if (isStarted) {
@@ -635,7 +626,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             @Override
             public void onClick(View view) {
 
-                if (!isStarted) {
+                if (!isStarted || music.isEmpty()) {
 
                 }else if (isShuffle) {
                     // shuffle is on - play a random song
@@ -681,7 +672,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
             @Override
             public void onClick(View view) {
 
-                if (!isStarted) {
+                if (!isStarted || music.isEmpty()) {
 
                 }
                 else if (isShuffle) {
@@ -863,6 +854,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 textViewGlueckwunsch = (TextView) dialogChooseDrink.findViewById(R.id.textViewGlueckwunsch);
                 textViewNameChoose = (TextView) dialogChooseDrink.findViewById(R.id.textViewNameChoose);
 
+
                 buttonRandomDrink.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -935,8 +927,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     buttonChangeName.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            //TODO BUG evtl, Tatstatu geht net hoch...
-                            //dialogChangeName.setTitle("Teamname ändern");
                             final boolean[] hasThreeMembers = {true};
                             Button buttonOK = (Button) dialogChangeName.findViewById(R.id.buttonChangeTeamOK);
                             final EditText editName = (EditText) dialogChangeName.findViewById(R.id.editTextChangeTeam);
@@ -1268,19 +1258,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         adapterTeamList.notifyDataSetChanged();
     }
 
-    ////////////////////////----------------------------\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\TODO
-
-
-
-
-
-    ////////////////////////----------------------------\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\TODO
-
-
-
-
-
-
     private void resetDrinkDialog(){
         hasChoosen = 0;
         drink = -1;
@@ -1310,7 +1287,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         imageViewDrink3.clearAnimation();
         teamList.get(pos).increaseStrackLevel(5);
         teamList.get(pos).setDrunk(teamList.get(pos).getDrunkPlain());
-
+        schnaps++;
 
             switch (winnerDrink){
                 case 1:
@@ -1351,10 +1328,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     break;
 
         }
-
-
-
-        //TODO string richtig empfanen
 
         new CountDownTimer(5000, 1000) {
 
@@ -1630,10 +1603,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 Random random = new Random();
                 delay2 = random.nextInt(4500 - 2500) + 2500;
 
-                if (imageViewPigClosedEyes.getVisibility() == View.VISIBLE)
-                    imageViewPigClosedEyes.setVisibility(View.INVISIBLE);
+                if (imageViewPictureClosedEyes.getVisibility() == View.VISIBLE)
+                    imageViewPictureClosedEyes.setVisibility(View.INVISIBLE);
                 else {
-                    imageViewPigClosedEyes.setVisibility(View.VISIBLE);
+                    imageViewPictureClosedEyes.setVisibility(View.VISIBLE);
                     delay2 = 160;
                 }
 
@@ -1744,8 +1717,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         hTimeDate.postDelayed(new Runnable() {
             @Override
             public void run() {
-                    //Log.e("RANDOM SEK", ""+(delay3))
-                //Random rand = new Random();
+                textViewAnzahlAlarmierungen.setText(""+alarmierungen);
+                textViewAnzahlSchnaps.setText(""+schnaps);
                 date = new Date();
                 s = dateFormat.format(date);
                 textViewDateTime.setText(s);
@@ -1781,6 +1754,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
             teamList.get(posList).setAlerted(true);
             isOneAlarmed = true;
+            alarmierungen++;
             handlerBT.sendBT("ALARM#");
             delay3 = minVal + (long)(Math.random()*(maxVal - minVal));
             //fadeOut();
@@ -1956,7 +1930,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
         // return songs;
     }
-    @Override
+    /*@Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
@@ -2007,14 +1981,14 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     @Override
     public void onConnectionSuspended(int i) {
-       /* mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+       *//* mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 mGoogleApiClient);
         if (mLastLocation != null) {
            // mLatitudeText.setText(String.valueOf(mLastLocation.getLatitude()));
             //mLongitudeText.setText(String.valueOf(mLastLocation.getLongitude()));
             LatLng tmp = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
             markerStart.setPosition(tmp);
-        }*/
+        }*//*
     }
 
     @Override
@@ -2055,8 +2029,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         if (mGoogleApiClient != null) {
             mGoogleApiClient.connect();
         }
-    }
-
+    }//TODO maps
+*/
     public void checkBT() {
         checkBTstate.postDelayed(new Runnable() {
             @Override
@@ -2118,9 +2092,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     protected void onPause() {
         super.onPause();
         //TODO Dinge ausstellen
-        if(mGoogleApiClient != null && mGoogleApiClient.isConnected())
-        mGoogleApiClient.disconnect();
-        unregisterReceiver(mReceiver);
+        /*if(mGoogleApiClient != null && mGoogleApiClient.isConnected())
+        mGoogleApiClient.disconnect(); TODO MAPS
+        */unregisterReceiver(mReceiver);
     }
 
 
@@ -2129,8 +2103,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     protected void onResume() {
         super.onResume();
 
-        if(mGoogleApiClient != null)
-        mGoogleApiClient.connect();
+     //   if(mGoogleApiClient != null) TODO MAPS
+       // mGoogleApiClient.connect();
         this.registerReceiver(mReceiver, filter);
 
     }
@@ -2277,6 +2251,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
            musicTrimmed.add(a.substring(25));
         }
         Collections.sort(music);
+        Collections.sort(musicTrimmed);
         fileList = new ArrayAdapter<String>(this, R.layout.spinner_item, item);
         listViewMusic.setAdapter(fileList);
 

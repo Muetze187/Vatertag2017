@@ -106,11 +106,16 @@
 -->
     <TextView
         android:layout_width="wrap_content"
-        android:layout_height="48dp"
+        android:layout_height="60dp"
         android:id="@+id/textViewSong"
-        android:textColor="@color/colorPink"
-        android:textSize="16sp"
+        android:textColor="@color/colorText"
+        android:shadowColor="@color/colorText"
+        android:shadowDx="0.0"
+        android:shadowDy="0.0"
+        android:shadowRadius="4"
+        android:textSize="20sp"
         android:padding="5dp"
+        android:layout_marginBottom="60dp"
         android:layout_below="@+id/seekBarMusic"
         android:layout_toRightOf="@+id/dividerMainLeft"
         android:layout_alignLeft="@+id/seekBarMusic"
@@ -128,6 +133,7 @@
     <View
         android:layout_width="wrap_content"
         android:layout_height="1dp"
+        android:layout_marginTop="20dp"
         android:id="@+id/dividerMainHorizontal"
         android:background="@color/colorText"
         android:layout_below="@+id/textViewFett"/>
@@ -139,10 +145,10 @@
         android:divider="@color/colorText"
         android:dividerHeight="4dp"
         android:layout_marginRight="2dp"
-        android:layout_below="@+id/textViewFett"
+        android:layout_below="@+id/dividerMainHorizontal"
         android:layout_alignRight="@+id/dividerMainLeft"/>
 
-    <fragment
+    <!--<fragment
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:name="com.google.android.gms.maps.MapFragment"
@@ -151,7 +157,24 @@
         android:layout_below="@+id/dividerMainHorizontal"
         android:layout_toEndOf="@+id/dividerMainLeft"
         android:layout_alignRight="@+id/dividerMainInvisible"
-        android:layout_alignBottom="@+id/dividerMainInvisible2"/>
+        android:layout_alignBottom="@+id/dividerMainInvisible2"/>-->
+    <ImageView
+        android:id="@+id/map"
+        android:layout_width="380dp"
+        android:layout_height="380dp"
+        android:layout_below="@+id/dividerMainHorizontal"
+        android:layout_margin="5dp"
+        android:layout_toEndOf="@+id/dividerMainLeft"
+        android:background="@drawable/schwein_big" />
+
+    <ImageView
+        android:id="@+id/map2"
+        android:layout_width="380dp"
+        android:layout_height="380dp"
+        android:layout_below="@+id/dividerMainHorizontal"
+        android:layout_margin="5dp"
+        android:layout_toEndOf="@+id/dividerMainLeft"
+        android:background="@drawable/schwein_big_closedeyes" />
 
     <View
         android:layout_width="1dp"
@@ -182,13 +205,55 @@
     <View
         android:layout_width="wrap_content"
         android:layout_height="1dp"
+        android:background="@color/colorText"
         android:id="@+id/dividerMainInvisible2"
-        android:layout_toEndOf="@+id/listViewTeams"
-        android:layout_below="@id/seekBarMusic"
-        android:layout_marginTop="440dp" />
-
+        android:layout_alignRight="@+id/dividerMainInvisible"
+        android:layout_alignLeft="@+id/dividerMainLeft"
+        android:layout_toEndOf="@+id/listViewSearch"
+        android:layout_below="@id/map" />
 
     <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorText"
+        android:textSize="32sp"
+        android:id="@+id/textViewAlarmierungen"
+        android:text="Alarmierungen: "
+        android:layout_alignBaseline="@+id/textViewMengeAlarmierungenAnzahl"
+        android:layout_alignBottom="@+id/textViewMengeAlarmierungenAnzahl"
+        android:layout_alignStart="@+id/textViewMengeSchnaps" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewAlarmierungen"
+        android:textColor="@color/colorText"
+        android:textSize="32sp"
+        android:id="@+id/textViewMengeSchnaps"
+        android:layout_alignLeft="@+id/map"
+        android:text="Schnaps gsoff: "/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewAlarmierungen"
+        android:textColor="@color/colorText"
+        android:textSize="32sp"
+        android:text=""
+        android:id="@+id/textViewMengeSchnapsAnzahl"
+        android:layout_toRightOf="@+id/textViewMengeSchnaps" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorText"
+        android:textSize="32sp"
+        android:text=""
+        android:layout_below="@+id/dividerMainInvisible2"
+        android:id="@+id/textViewMengeAlarmierungenAnzahl"
+        android:layout_toRightOf="@+id/textViewAlarmierungen"
+        />
+
+
+    <!--<TextView
         android:text="Noch zu Wandern: "
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -206,17 +271,9 @@
            android:id="@+id/switchMap"
            android:textSize="16sp"
            android:layout_below="@+id/textViewDistance"
-           android:layout_alignStart="@+id/textViewDistance" />
+           android:layout_alignStart="@+id/textViewDistance" />-->
 
-   <!-- <android.support.v7.widget.SearchView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:clickable="true"
-        android:queryHint="search music"
-        android:id="@+id/search"
-        android:layout_toRightOf="@+id/dividerMainInvisible"
-        android:layout_above="@+id/dividerMainHorizontal"
-        />-->
+
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -242,6 +299,7 @@
         android:layout_height="0px"
         android:focusable="true"
         android:focusableInTouchMode="true" />
+
 
 
 </RelativeLayout>
