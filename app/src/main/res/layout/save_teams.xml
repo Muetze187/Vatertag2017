@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:orientation="vertical" android:layout_width="640dp"
+    android:layout_centerHorizontal="true"
+    android:layout_height="260dp" android:background="@drawable/dialog_border">
 
     <TextView
         android:layout_width="wrap_content"
@@ -9,24 +10,24 @@
         android:textColor="@color/colorPink"
         android:layout_alignParentStart="true"
         android:id="@+id/textViewActionSpeichern"
-        android:textSize="@dimen/textSizes"
+        android:textSize="40sp"
         android:text="Wirklich die Teams speichern?"/>
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="200dp"
+        android:layout_height="100dp"
         android:text="Ja"
-        android:textSize="@dimen/textSizes"
+        android:textSize="32sp"
         android:layout_alignParentStart="true"
         android:id="@+id/buttonJaSpeichern"
         android:layout_below="@+id/textViewActionSpeichern"
        />
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="200dp"
+        android:layout_height="100dp"
         android:text="Nein"
-        android:textSize="@dimen/textSizes"
+        android:textSize="32sp"
         android:id="@+id/buttonNeinSpeichern"
         android:layout_below="@+id/textViewActionSpeichern"
         android:layout_alignRight="@+id/textViewActionSpeichern"/>

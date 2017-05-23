@@ -67,7 +67,7 @@ public class Teams implements Cloneable{
 */      this.memberOne = memberOne ;
         this.memberTwo = memberTwo;
         hasThreeMembers = false;
-        strackLevel = "Müdigkeit: ";
+        strackLevel = "Stracklevel: ";
         vielfalt = "Verteilung: ";
         isAlerted = false;
         progressStrack = 0;

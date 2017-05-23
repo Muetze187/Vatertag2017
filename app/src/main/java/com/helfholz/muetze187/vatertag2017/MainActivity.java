@@ -95,11 +95,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     LinearLayout dummie;
     boolean successBT = false;
     static boolean alertOn = true;
-    static boolean sameDrinkTeam = false;
+    static boolean sameDrinkTeam = true;
     static boolean isOneAlarmed = false;
     static String msg = "";
-    static long maxVal = 300000L;
-    static  long minVal = 50000L;
+    static long maxVal = 60000L;
+    static  long minVal = 0L;
     int randomTeamMember;
     TextView textViewDateTime;
     static TextView textFett;
@@ -933,6 +933,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 });
                 if (teamList.get(position).getAlerted()) {
                         doTheShit(getRandomTeamMember(position), false);
+                        Log.e("randomMember","" + randomTeamMember );
 
                 } else {
 
@@ -1368,45 +1369,62 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
             @Override
             public void onFinish() {
-                if(zaehler == 0){
-                    if(member.equals(teamList.get(pos).getMemberOne())){
-                        if(sameDrinkTeam){
+                if(zaehler == 0) {
+                    Log.e("MEMBERstring zaehler 0",member + " " + teamList.get(pos).getHasThreeMembers() + " " + zaehler + " gleich " + member.equals(teamList.get(pos).getMemberOne()));
+                    Log.e("MEMBERS zaehler 0",teamList.get(pos).getMemberOne() + " " + teamList.get(pos).getMemberTwo() + " " + teamList.get(pos).getMemberThree());
+                    if (member.equals(teamList.get(pos).getMemberOne())) {
+                        if (sameDrinkTeam) {
                             doTheShit(teamList.get(pos).getMemberTwo(), true);
-                        }else{
+                            member = teamList.get(pos).getMemberTwo();
+                        } else {
                             doTheShit(teamList.get(pos).getMemberTwo(), false);
+                            member = teamList.get(pos).getMemberTwo();
                         }
-                    }
-                    if(member.equals(teamList.get(pos).getMemberTwo())){
+                    }else if (member.equals(teamList.get(pos).getMemberTwo())) {
+                        if (teamList.get(pos).getHasThreeMembers()) {
+                            if (sameDrinkTeam) {
+                                doTheShit(teamList.get(pos).getMemberThree(), true);
+                                member = teamList.get(pos).getMemberThree();
+                            } else {
+                                doTheShit(teamList.get(pos).getMemberThree(), false);
+                                member = teamList.get(pos).getMemberThree();
+                            }
+                        } else {
+                            if (sameDrinkTeam) {
+                                doTheShit(teamList.get(pos).getMemberOne(), true);
+                                member = teamList.get(pos).getMemberOne();
+                            } else {
+                                doTheShit(teamList.get(pos).getMemberOne(), false);
+                                member = teamList.get(pos).getMemberOne();
+                            }
+                        }
+
+                    }else if(member.equals(teamList.get(pos).getMemberThree())){
                         if(sameDrinkTeam){
                             doTheShit(teamList.get(pos).getMemberOne(), true);
+                            member = teamList.get(pos).getMemberOne();
                         }else{
                             doTheShit(teamList.get(pos).getMemberOne(), false);
-                        }
-                    }
-                    if(member.equals(teamList.get(pos).getMemberThree())){
-                        if(sameDrinkTeam){
-                            doTheShit(teamList.get(pos).getMemberOne(), true);
-                        }else{
-                            doTheShit(teamList.get(pos).getMemberOne(), false);
+                            member = teamList.get(pos).getMemberOne();
                         }
                     }
                     zaehler++;
                 } else if(zaehler == 1 && teamList.get(pos).getHasThreeMembers()){
+                    Log.e("MEMBERstring zaehler 1",member + " " + teamList.get(pos).getHasThreeMembers() + " " + zaehler);
+                    Log.e("MEMBERS zaehler 1",teamList.get(pos).getMemberOne() + " " + teamList.get(pos).getMemberTwo() + " " + teamList.get(pos).getMemberThree());
                     if(member.equals(teamList.get(pos).getMemberOne())){
                         if(sameDrinkTeam){
                             doTheShit(teamList.get(pos).getMemberTwo(), true);
                         }else{
                             doTheShit(teamList.get(pos).getMemberTwo(), false);
                         }
-                    }
-                    if(member.equals(teamList.get(pos).getMemberTwo())){
+                    }else if(member.equals(teamList.get(pos).getMemberTwo())){
                         if(sameDrinkTeam){
                             doTheShit(teamList.get(pos).getMemberThree(), true);
                         }else{
                             doTheShit(teamList.get(pos).getMemberThree(), false);
                         }
-                    }
-                    if(member.equals(teamList.get(pos).getMemberThree())){
+                    }else if(member.equals(teamList.get(pos).getMemberThree())){
                         if(sameDrinkTeam){
                             doTheShit(teamList.get(pos).getMemberOne(), true);
                         }else{
@@ -1763,7 +1781,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
 
-    private static void toggleAlert(int posList) {
+    protected static void toggleAlert(int posList) {
 
 
             teamList.get(posList).setAlerted(true);
@@ -2272,7 +2290,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
     private String getRandomTeamMember(int position){
 
-        randomTeamMember = (int)((Math.random()) * 6 + 1);
+        randomTeamMember = (int)((Math.random()) * 3 + 1);
         switch(randomTeamMember){
             case 1:
                 member = teamList.get(position).getMemberOne();

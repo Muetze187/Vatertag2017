@@ -1,29 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:orientation="vertical" android:layout_width="640dp"
+    android:layout_centerHorizontal="true"
+    android:layout_height="260dp" android:background="@drawable/dialog_border">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/colorPink"
-        android:textSize="@dimen/textSizes"
+        android:textSize="40sp"
         android:id="@+id/textViewActionLaden"
         android:text="Wirklich die Teams laden?"/>
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="200dp"
+        android:layout_height="100dp"
         android:text="Ja"
-        android:textSize="@dimen/textSizes"
+        android:textSize="32sp"
         android:id="@+id/buttonJaLaden"
         android:layout_below="@+id/textViewActionLaden"/>
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="200dp"
+        android:layout_height="100dp"
         android:text="Nein"
-        android:textSize="@dimen/textSizes"
+        android:textSize="32sp"
         android:id="@+id/buttonNeinLaden"
         android:layout_below="@+id/textViewActionLaden"
         android:layout_alignRight="@+id/textViewActionLaden"

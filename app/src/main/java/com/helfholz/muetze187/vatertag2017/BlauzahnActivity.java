@@ -47,12 +47,14 @@ import static com.helfholz.muetze187.vatertag2017.MainActivity.ausschankZeitTank
 import static com.helfholz.muetze187.vatertag2017.MainActivity.delay3;
 
 import static com.helfholz.muetze187.vatertag2017.MainActivity.alertOn;
+import static com.helfholz.muetze187.vatertag2017.MainActivity.handlerBT;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.isOneAlarmed;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.maxVal;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.minVal;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.sameDrinkTeam;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.teamList;
 import static com.helfholz.muetze187.vatertag2017.MainActivity.listViewTeams;
+import static com.helfholz.muetze187.vatertag2017.MainActivity.toggleAlert;
 
 
 public class BlauzahnActivity extends AppCompatActivity {
@@ -121,6 +123,14 @@ public class BlauzahnActivity extends AppCompatActivity {
         editTextAusschankZeitTank2.setText(""+ausschankZeitTank2);
         editTextAusschankZeitTank3 = (EditText) findViewById(R.id.editTextWartungAusschankZeitTank3);
         editTextAusschankZeitTank3.setText(""+ausschankZeitTank3);
+
+        btCheckAntrieb.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(handlerBTBlau.getIsConnected())
+                    toggleAlert(0);
+            }
+        });
 
         editTextAusschankZeitTank1.addTextChangedListener(new TextWatcher() {
             @Override

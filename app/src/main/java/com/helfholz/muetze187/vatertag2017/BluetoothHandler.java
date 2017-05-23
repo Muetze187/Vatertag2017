@@ -51,7 +51,8 @@ public class BluetoothHandler extends Application{
     private InputStream stream_in = null;
     private boolean is_connected = false;
     private boolean is_bt_on = false;
-    private static String mac_adresse = "20:15:01:29:11:32";
+    //private static String mac_adresse = "20:15:01:29:11:32";
+    private static String mac_adresse = "98:D3:32:10:79:C6";
     private BluetoothDevice remoteDevice;
     private static BluetoothHandler handlerBT = null;
     Context context;
@@ -148,7 +149,7 @@ public class BluetoothHandler extends Application{
             if (getIsConnected()) {
                 textViewinfo.setText("Bereits verbunden");
             } else {
-                textViewinfo.setText("Verbinde...");
+                //textViewinfo.setText("Verbinde...");
                 setMac_adresse(adress);
                 socket = getSocket();
                 btAdapter.cancelDiscovery();
@@ -160,9 +161,9 @@ public class BluetoothHandler extends Application{
                                 socket.connect();
                                 if(socket.isConnected())
                                     setIs_connected(true);
-                                    textViewinfo.setText("Verbunden");
+                                    //textViewinfo.setText("Verbunden");
                             } catch (IOException e) {
-                                textViewinfo.setText("Fehler - Abruch");
+                                //textViewinfo.setText("Fehler - Abruch");
                                 e.printStackTrace();
                                 setIs_connected(false);
                             }
