@@ -122,9 +122,9 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     final int delay = 1000;
     int delay2 = 2000;
     static long delay3;
-    static int ausschankZeitTank1 = 400;
-    static int ausschankZeitTank2 = 400;
-    static int ausschankZeitTank3 = 400;
+    static int ausschankZeitTank1 = 800;
+    static int ausschankZeitTank2 = 800;
+    static int ausschankZeitTank3 = 800;
     Handler hTimeDate;
     static Handler hMusic;
     Handler hBlinzeln;
@@ -194,10 +194,11 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     private SoundPool soundPool;
     int soundAlarm;
     int volume;
+    int length;
     int position2;
     int schnaps = 0;
     static int alarmierungen = 0;
-    private String root = "/storage/extSdCard/Music/" ;
+    private String root = "/storage/extSdCard/Music/";
     int zaehler = 0;
 
     @Override
@@ -284,7 +285,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
          //   musicTrimmed.add(a.substring(25));
         //}
         editTextSearch = (EditText) findViewById(R.id.search);
-
+        editTextSearch.setVisibility(View.INVISIBLE);
         //TESTS
         //spinner = (Spinner) findViewById(R.id.spinner);
         /*adapterSpinner = new ArrayAdapter<String>(this,
@@ -601,9 +602,8 @@ TODOMAPS        });*/
                         //currentPosition = mediaPlayerMusic.getCurrentPosition();
                         play.setBackgroundResource(R.drawable.playcircularbutton);
                     }
-                     else{
+                     else {
                         mediaPlayerMusic.start();
-                        //mediaPlayerMusic.seekTo(currentPosition);
                         play.setBackgroundResource(R.drawable.pausecircularbutton);
                     }
                     fromIntent = false;
@@ -764,6 +764,10 @@ TODOMAPS        });*/
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 File file = new File((String) listViewSearch.getItemAtPosition(position));
+                if(file.exists()){
+                    file.setReadable(true);
+                }
+
                 if(isShuffle){
                     isShuffle = false;
                     music = musicTemp;
@@ -778,7 +782,7 @@ TODOMAPS        });*/
                 textViewSong.setText(file.getName());
                 Log.e("WÄSCHE",""+file.getName());
                 try {
-                    playSong("/storage/emulated/0/Music" +file.getAbsolutePath());
+                    playSong("/storage/emulated/0/Music/" +file.getAbsolutePath());
                     play.setBackgroundResource(R.drawable.pausecircularbutton);
                     isStarted = true;
                 } catch (IOException e) {
@@ -1873,7 +1877,7 @@ TODOMAPS        });*/
     public void getMusic() { //String[]
         //FOR ACTUAL DEVICE
         String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension("mp3");
-        String selectionMimeType = MediaStore.Files.FileColumns.MIME_TYPE + "=?";
+        String selectionMimeType = MediaStore.Files.FileColumns.MIME_TYPE + "=?"; //TODO Evtl löschen
         String[] selectionArgsMp3 = new String[]{ mimeType};
         final Cursor mCursor = getContentResolver().query(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -1881,7 +1885,7 @@ TODOMAPS        });*/
                 MediaStore.Audio.Media._ID);
         ContentResolver cr = this.getContentResolver();
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
+        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
         String sortOrder = MediaStore.Audio.Media.ARTIST_ID + " ASC";
         Cursor cur = cr.query(uri, null, selection, null, sortOrder);
 
@@ -1908,10 +1912,10 @@ TODOMAPS        });*/
         }
         cur.close();
         for(int i = 0; i < musicTest.size(); i++)
-            Log.e("music unne","" + musicTest.get(i));
+            Log.e("music unne test","" + musicTest.get(i));
 
         for(int i = 0; i < musicTrimmedSearch.size(); i++)
-            Log.e("music unne","" + musicTrimmedSearch.get(i));
+            Log.e("music unne trimmed search","" + musicTrimmedSearch.get(i));
 
 
 

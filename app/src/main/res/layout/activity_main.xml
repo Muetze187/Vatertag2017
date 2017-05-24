@@ -172,7 +172,7 @@
         android:layout_width="380dp"
         android:layout_height="380dp"
         android:layout_below="@+id/dividerMainHorizontal"
-        android:layout_margin="5dp"
+        android:layout_margintop="250dp"
         android:layout_toEndOf="@+id/dividerMainLeft"
         android:background="@drawable/schwein_big_closedeyes" />
 
